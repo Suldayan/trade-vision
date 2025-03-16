@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageService {
     @Override
     public BigDecimal sumClosingPrice() {
+        log.info("sdsd");
         return null;
     }
 
