@@ -10,9 +10,10 @@ import java.math.BigDecimal;
 @Slf4j
 @RequiredArgsConstructor
 public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageService {
+    
+
     @Override
     public BigDecimal sumClosingPrice() {
-        log.info("sdsd");
         return null;
     }
 
