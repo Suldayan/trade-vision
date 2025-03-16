@@ -1,0 +1,40 @@
+spring:
+  application:
+    name: trade-vision-backend
+
+  task:
+    scheduling:
+      pool:
+        size: 1
+
+  modulith:
+    events:
+      completion:
+        mode: delete
+      jdbc-schema-initialization:
+        enabled: true
+
+  datasource:
+    url: ${SUPA_DB_URL}
+    username: ${SUPA_DB_USERNAME}
+    password: ${SUPA_DB_PASSWORD}
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: none
+
+  flyway:
+    enabled: false
+    baseline-on-migration: true
+    locations: classpath:db/migration
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health, metrics
+
+logging:
+  level:
+    root: INFO
+
