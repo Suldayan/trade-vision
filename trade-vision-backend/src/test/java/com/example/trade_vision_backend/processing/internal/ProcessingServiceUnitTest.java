@@ -1,7 +1,6 @@
 package com.example.trade_vision_backend.processing.internal;
 
 import com.example.trade_vision_backend.ingestion.ProcessableMarketDTO;
-import com.example.trade_vision_backend.ingestion.market.RawMarketModel;
 import com.example.trade_vision_backend.processing.ProcessedMarketModel;
 import com.example.trade_vision_backend.processing.internal.infrastructure.db.ProcessingRepository;
 import com.example.trade_vision_backend.processing.internal.infrastructure.exception.ProcessingException;
@@ -36,7 +35,7 @@ public class ProcessingServiceUnitTest {
 
     @Test
     public void transformToMarketModel_SuccessfullyReturnsMarketModelSet() {
-        Set<ProcessableMarketDTO> processableMarketDTOS = createValidMarketModels();
+        List<ProcessableMarketDTO> processableMarketDTOS = createValidMarketModels();
 
         List<ProcessedMarketModel> result = assertDoesNotThrow(
                 () -> processingService.transformToMarketModel(processableMarketDTOS, MOCK_TIMESTAMP));
@@ -53,10 +52,10 @@ public class ProcessingServiceUnitTest {
     @Transactional
     @Test
     public void executeProcessing_SuccessfullyExecutesFullProcessingFlow() {
-        Set<ProcessableMarketDTO> validSet = createValidMarketModels();
+        List<ProcessableMarketDTO> validList = createValidMarketModels();
 
         assertDoesNotThrow(
-                () -> processingService.executeProcessing(validSet, MOCK_TIMESTAMP));
+                () -> processingService.executeProcessing(validList, MOCK_TIMESTAMP));
     }
 
     @Test
@@ -80,7 +79,7 @@ public class ProcessingServiceUnitTest {
     @Test
     public void executeProcessing_ThrowsProcessingExceptionOnEmptyData() {
         ProcessingException exception = assertThrows(
-                ProcessingException.class, () -> processingService.executeProcessing(Collections.emptySet(), MOCK_TIMESTAMP));
+                ProcessingException.class, () -> processingService.executeProcessing(Collections.emptyList(), MOCK_TIMESTAMP));
 
         assertNotNull(exception);
         assertTrue(exception.getMessage().contains("Failed to process due to invalid data"));
@@ -88,19 +87,19 @@ public class ProcessingServiceUnitTest {
 
     @Test
     public void executeProcessing_ThrowsProcessingExceptionOnInvalidDataSize() {
-        Set<ProcessableMarketDTO> invalidSet = createInvalidMarketModels();
+        List<ProcessableMarketDTO> invalidList = createInvalidMarketModels();
 
         ProcessingException exception = assertThrows(
-                ProcessingException.class, () -> processingService.executeProcessing(invalidSet, MOCK_TIMESTAMP));
+                ProcessingException.class, () -> processingService.executeProcessing(invalidList, MOCK_TIMESTAMP));
 
         assertNotNull(exception);
         assertTrue(exception.getMessage().contains("Failed to process due to invalid data"));
     }
 
-    private static Set<ProcessableMarketDTO> createValidMarketModels() {
-        Set<ProcessableMarketDTO> set = new HashSet<>();
+    private static List<ProcessableMarketDTO> createValidMarketModels() {
+        List<ProcessableMarketDTO> list = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
-            set.add(new ProcessableMarketDTO(
+            list.add(new ProcessableMarketDTO(
                     "binance",
                     i + 1,
                     "BTC",
@@ -117,7 +116,7 @@ public class ProcessingServiceUnitTest {
             ));
         }
 
-        return set;
+        return list;
     }
 
     private static List<ProcessedMarketModel> createValidMarketModelList() {
@@ -138,10 +137,10 @@ public class ProcessingServiceUnitTest {
         return list;
     }
 
-    private static Set<ProcessableMarketDTO> createInvalidMarketModels() {
-        Set<ProcessableMarketDTO> set = new HashSet<>();
+    private static List<ProcessableMarketDTO> createInvalidMarketModels() {
+        List<ProcessableMarketDTO> list = new ArrayList<>();
         for (int i = 0; i < 10; i++) {
-            set.add(new ProcessableMarketDTO(
+            list.add(new ProcessableMarketDTO(
                     "binance",
                     i + 1,
                     "BTC",
@@ -158,6 +157,6 @@ public class ProcessingServiceUnitTest {
             ));
         }
 
-        return set;
+        return list;
     }
 }

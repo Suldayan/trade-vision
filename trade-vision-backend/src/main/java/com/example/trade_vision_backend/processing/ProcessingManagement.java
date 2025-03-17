@@ -24,7 +24,6 @@ import java.util.Set;
 public class ProcessingManagement {
     private final IngestionDataService ingestionDataService;
     private final ProcessingService processingService;
-    private final ProcessingMapper mapper;
 
     private static final Integer EXPECTED_SIZE = 100;
 
@@ -34,8 +33,7 @@ public class ProcessingManagement {
         final Long timestamp = ingestionCompleted.ingestedTimestamp();;
         validateMarkets(unprocessedData);
         log.info("Processing has been triggered for data of timestamp: {}", timestamp);
-        Set<ProcessableMarketDTO> unprocessedSet = mapper.INSTANCE.listToSet(unprocessedData);
-        processingService.executeProcessing(unprocessedSet, timestamp);
+        processingService.executeProcessing(unprocessedData, timestamp);
     }
 
     private void validateMarkets(@Nonnull List<ProcessableMarketDTO> unprocessedData) {

@@ -29,7 +29,7 @@ public class ProcessingServiceImpl implements ProcessingService {
     @Nonnull
     @Override
     public List<ProcessedMarketModel> transformToMarketModel(
-            @Nonnull Set<ProcessableMarketDTO> processableMarketDTOS,
+            @Nonnull List<ProcessableMarketDTO> processableMarketDTOS,
             @Nonnull Long timestamp
     ) throws IllegalArgumentException {
         try {
@@ -53,7 +53,7 @@ public class ProcessingServiceImpl implements ProcessingService {
 
     @Override
     public void executeProcessing(
-            @Nonnull Set<ProcessableMarketDTO> processableMarketDTOS,
+            @Nonnull List<ProcessableMarketDTO> processableMarketDTOS,
             @Nonnull Long timestamp
     ) throws ProcessingException {
         try {
@@ -89,7 +89,7 @@ public class ProcessingServiceImpl implements ProcessingService {
     }
 
     private void validateRawMarketModels(
-            @Nonnull Set<ProcessableMarketDTO> processableMarketDTOS,
+            @Nonnull List<ProcessableMarketDTO> processableMarketDTOS,
             @Nonnull Long timestamp) throws IllegalArgumentException {
         if (processableMarketDTOS.isEmpty()) {
             // We throw an exception here because it's expected that there is data available at the given timestamp

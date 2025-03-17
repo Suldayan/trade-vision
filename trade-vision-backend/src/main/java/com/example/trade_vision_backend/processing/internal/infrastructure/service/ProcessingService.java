@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Set;
 
 public interface ProcessingService {
-    List<ProcessedMarketModel> transformToMarketModel(Set<ProcessableMarketDTO> processableMarketDTOS, Long timestamp) throws IllegalArgumentException;
-    void executeProcessing(Set<ProcessableMarketDTO> processableMarketDTOS, Long timestamp) throws ProcessingException;
+    List<ProcessedMarketModel> transformToMarketModel(List<ProcessableMarketDTO> processableMarketDTOS, Long timestamp) throws IllegalArgumentException;
+    void executeProcessing(List<ProcessableMarketDTO> processableMarketDTOS, Long timestamp) throws ProcessingException;
     void saveProcessedData(List<ProcessedMarketModel> processedData) throws ProcessingException;
 }
