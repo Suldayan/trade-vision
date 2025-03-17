@@ -1,9 +1,9 @@
-package com.example.trade_vision_backend.strategies.ema;
+package com.example.trade_vision_backend.strategies;
 
 import java.math.BigDecimal;
 
 public interface SimpleMovingAverageService {
-    BigDecimal sumClosingPrice();
+    BigDecimal sumClosingPrice(Integer timePeriod);
     Integer getTotalNumberOfPeriods();
     BigDecimal calculateAverage();
 }
