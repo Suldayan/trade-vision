@@ -11,10 +11,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.web.client.RestClientException;
 
 import java.math.BigDecimal;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -49,7 +46,7 @@ public class MarketServiceUnitTest {
     @Test
     public void getMarketsData_ThrowsRestClientExceptionOnEmptyData() {
         MarketWrapperDTO wrapperDTO = new MarketWrapperDTO(
-                Collections.emptySet(),
+                Collections.emptyList(),
                 TIMESTAMP
         );
 
@@ -64,7 +61,7 @@ public class MarketServiceUnitTest {
     @Test
     public void getMarketsData_ThrowsRestClientExceptionOnInvalidDataSize() {
         MarketWrapperDTO wrapperDTO = new MarketWrapperDTO(
-                Set.of(new RawMarketDTO(
+                List.of(new RawMarketDTO(
                         "binance",
                         1,
                         "BTC",
@@ -106,10 +103,10 @@ public class MarketServiceUnitTest {
     public void convertWrapperDataToRecord_ReturnsValidRawMarketDTOSet() {
         MarketWrapperDTO wrapperDTO = new MarketWrapperDTO(createValidMarketDTOs(), TIMESTAMP);
 
-        Set<RawMarketDTO> result = assertDoesNotThrow(
+        List<RawMarketDTO> result = assertDoesNotThrow(
                 () -> marketService.convertWrapperDataToRecord(wrapperDTO));
 
-        RawMarketDTO marketDTO = result.iterator().next();
+        RawMarketDTO marketDTO = result.getFirst();
 
         assertNotNull(result);
         assertFalse(result.isEmpty());
@@ -119,7 +116,7 @@ public class MarketServiceUnitTest {
 
     @Test
     public void rawMarketDTOToModel_ConvertsDTOToModelSuccessfully() {
-        Set<RawMarketDTO> marketDTOS = createValidMarketDTOs();
+        List<RawMarketDTO> marketDTOS = createValidMarketDTOs();
 
         List<RawMarketModel> result = assertDoesNotThrow(
                 () -> marketService.rawMarketDTOToModel(marketDTOS));
@@ -130,8 +127,8 @@ public class MarketServiceUnitTest {
 
     }
 
-    private static Set<RawMarketDTO> createValidMarketDTOs() {
-        Set<RawMarketDTO> set = new HashSet<>();
+    private static List<RawMarketDTO> createValidMarketDTOs() {
+        List<RawMarketDTO> set = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
             set.add(new RawMarketDTO(
                     "binance",

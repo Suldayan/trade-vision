@@ -24,7 +24,7 @@ public class MarketServiceIntegrationTest {
                 () -> marketService.getMarketsData()
         );
 
-        Set<RawMarketDTO> resultSet = result.markets();
+        List<RawMarketDTO> resultSet = result.markets();
 
         assertNotNull(result);
         assertFalse(resultSet.isEmpty());
@@ -37,7 +37,7 @@ public class MarketServiceIntegrationTest {
                 () -> marketService.getMarketsData()
         );
 
-        Set<RawMarketDTO> result = assertDoesNotThrow(
+        List<RawMarketDTO> result = assertDoesNotThrow(
                 () -> marketService.convertWrapperDataToRecord(wrapperDTO)
         );
 
@@ -51,7 +51,7 @@ public class MarketServiceIntegrationTest {
         MarketWrapperDTO wrapperDTO = assertDoesNotThrow(
                 () -> marketService.getMarketsData()
         );
-        Set<RawMarketDTO> dtoSet = assertDoesNotThrow(
+        List<RawMarketDTO> dtoSet = assertDoesNotThrow(
                 () -> marketService.convertWrapperDataToRecord(wrapperDTO)
         );
         List<RawMarketModel> result = assertDoesNotThrow(

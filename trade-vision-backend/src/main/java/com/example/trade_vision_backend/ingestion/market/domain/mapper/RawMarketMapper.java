@@ -13,5 +13,5 @@ public interface RawMarketMapper {
     RawMarketMapper INSTANCE = Mappers.getMapper(RawMarketMapper.class);
 
     RawMarketModel dtoToEntity(RawMarketDTO dto);
-    List<RawMarketModel> dtoSetToEntitySet(Set<RawMarketDTO> marketDTOS);
+    List<RawMarketModel> dtoSetToEntitySet(List<RawMarketDTO> marketDTOS);
 }

@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Set;
 
 public interface IngestionService {
-    void sendEvent(Set<RawMarketDTO> marketDTOS);
+    void sendEvent(List<RawMarketDTO> marketDTOS);
     void executeIngestion();
     void saveMarketData(List<RawMarketModel> latestFetchedData) throws IngestionException;
 }

@@ -15,7 +15,6 @@ import org.springframework.web.client.RestClientResponseException;
 
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
@@ -46,8 +45,8 @@ public class MarketServiceImpl implements MarketService {
 
     @Nonnull
     @Override
-    public Set<RawMarketDTO> convertWrapperDataToRecord(@Nonnull MarketWrapperDTO marketWrapper) {
-        Set<RawMarketDTO> marketSet = marketWrapper.markets()
+    public List<RawMarketDTO> convertWrapperDataToRecord(@Nonnull MarketWrapperDTO marketWrapper) {
+        List<RawMarketDTO> marketSet = marketWrapper.markets()
                 .stream()
                 .filter(Objects::nonNull)
                 .map(field -> RawMarketDTO.builder()
@@ -65,7 +64,18 @@ public class MarketServiceImpl implements MarketService {
                         .updated(field.updated())
                         .timestamp(marketWrapper.timestamp())
                         .build())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
+        validateMarket(marketSet);
+        log.info("Converted wrapper data to record set of size: {}", marketSet.size());
+        return marketSet;
+    }
+
+    @Override
+    public List<RawMarketModel> rawMarketDTOToModel(List<RawMarketDTO> marketDTOS) {
+        return mapper.INSTANCE.dtoSetToEntitySet(marketDTOS);
+    }
+
+    private void validateMarket(@Nonnull List<RawMarketDTO> marketSet) {
         if (marketSet.isEmpty()) {
             log.warn("Market set returned as empty. Endpoint might be returning incomplete data");
             throw new RestClientException("Market set fetched but is empty");
@@ -73,13 +83,6 @@ public class MarketServiceImpl implements MarketService {
         if (marketSet.size() != 100) {
             throw new RestClientException("Market set fetched but set size is not 100");
         }
-        log.info("Converted wrapper data to record set of size: {}", marketSet.size());
-        return marketSet;
-    }
-
-    @Override
-    public List<RawMarketModel> rawMarketDTOToModel(Set<RawMarketDTO> marketDTOS) {
-        return mapper.INSTANCE.dtoSetToEntitySet(marketDTOS);
     }
 
     private void validateMarketWrapper(@Nonnull MarketWrapperDTO marketHolder) {

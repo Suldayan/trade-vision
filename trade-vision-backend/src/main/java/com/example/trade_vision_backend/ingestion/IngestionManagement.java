@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -20,12 +21,12 @@ public class IngestionManagement {
     private final ApplicationEventPublisher eventPublisher;
     private final static Integer EXPECTED_MARKET_COUNT = 100;
 
-    public void processFieldsForEvent(@Nonnull Set<RawMarketDTO> data) {
+    public void processFieldsForEvent(@Nonnull List<RawMarketDTO> data) {
         if (data.isEmpty()) {
             throw new IllegalArgumentException("Data set is empty");
         }
 
-        RawMarketDTO firstItem = data.iterator().next();
+        RawMarketDTO firstItem = data.getFirst();
         Long timestamp = firstItem.timestamp();
 
         if (timestamp == null) {
@@ -47,7 +48,7 @@ public class IngestionManagement {
         log.info("Ingestion event sent with size: {} and timestamp: {}", size, timestamp);
     }
 
-    private void validateFields(int size, @Nonnull Long timestamp, @Nonnull Set<RawMarketDTO> data) {
+    private void validateFields(int size, @Nonnull Long timestamp, @Nonnull List<RawMarketDTO> data) {
         if (size != EXPECTED_MARKET_COUNT) {
             throw new IllegalArgumentException(
                     String.format("Expected %d markets, but received %d", EXPECTED_MARKET_COUNT, size)

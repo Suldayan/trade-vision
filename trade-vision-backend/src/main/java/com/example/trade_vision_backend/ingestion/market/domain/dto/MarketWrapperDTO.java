@@ -5,10 +5,11 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.annotation.Nonnull;
 import lombok.Builder;
 
+import java.util.List;
 import java.util.Set;
 
 @Builder
 public record MarketWrapperDTO(
-        @JsonProperty(value = "data") @Nonnull Set<RawMarketDTO> markets,
+        @JsonProperty(value = "data") @Nonnull List<RawMarketDTO> markets,
         @JsonProperty(value = "timestamp") @Nonnull Long timestamp)
 {}

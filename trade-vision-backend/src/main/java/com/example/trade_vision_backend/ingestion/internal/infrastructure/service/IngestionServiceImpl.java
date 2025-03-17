@@ -28,7 +28,7 @@ public class IngestionServiceImpl implements IngestionService {
     private final IngestionManagement ingestionManagement;
 
     @Override
-    public void sendEvent(@Nonnull Set<RawMarketDTO> marketDTOS) {
+    public void sendEvent(@Nonnull List<RawMarketDTO> marketDTOS) {
         ingestionManagement.processFieldsForEvent(marketDTOS);
     }
 
@@ -37,7 +37,7 @@ public class IngestionServiceImpl implements IngestionService {
     public void executeIngestion() {
         try {
             MarketWrapperDTO marketWrapper = marketService.getMarketsData();
-            Set<RawMarketDTO> rawMarketDTOS = marketService.convertWrapperDataToRecord(marketWrapper);
+            List<RawMarketDTO> rawMarketDTOS = marketService.convertWrapperDataToRecord(marketWrapper);
             List<RawMarketModel> rawMarketModels = marketService.rawMarketDTOToModel(rawMarketDTOS);
             saveMarketData(rawMarketModels);
             sendEvent(rawMarketDTOS);
