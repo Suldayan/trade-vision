@@ -3,9 +3,7 @@ package com.example.trade_vision_backend.processing;
 import com.example.trade_vision_backend.ingestion.IngestionCompleted;
 import com.example.trade_vision_backend.ingestion.IngestionDataService;
 import com.example.trade_vision_backend.ingestion.ProcessableMarketDTO;
-import com.example.trade_vision_backend.ingestion.market.RawMarketModel;
 import com.example.trade_vision_backend.processing.internal.infrastructure.exception.ProcessingException;
-import com.example.trade_vision_backend.processing.internal.infrastructure.mapper.ProcessingMapper;
 import com.example.trade_vision_backend.processing.internal.infrastructure.service.ProcessingService;
 import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
@@ -15,7 +13,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
-import java.util.Set;
 
 @Transactional
 @Service
