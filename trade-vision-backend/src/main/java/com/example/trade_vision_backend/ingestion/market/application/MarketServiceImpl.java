@@ -46,6 +46,7 @@ public class MarketServiceImpl implements MarketService {
     @Nonnull
     @Override
     public List<RawMarketDTO> convertWrapperDataToRecord(@Nonnull MarketWrapperDTO marketWrapper) {
+        final Long timestamp = marketWrapper.timestamp();
         List<RawMarketDTO> marketSet = marketWrapper.markets()
                 .stream()
                 .filter(Objects::nonNull)
@@ -62,7 +63,7 @@ public class MarketServiceImpl implements MarketService {
                         .percentExchangeVolume(field.percentExchangeVolume())
                         .tradesCount24Hr(field.tradesCount24Hr())
                         .updated(field.updated())
-                        .timestamp(marketWrapper.timestamp())
+                        .timestamp(timestamp)
                         .build())
                 .collect(Collectors.toList());
         validateMarket(marketSet);
