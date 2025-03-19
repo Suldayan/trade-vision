@@ -61,5 +61,11 @@ public class MarketServiceIntegrationTest {
         assertNotNull(result);
         assertFalse(result.isEmpty());
         assertEquals(100, result.size());
+
+        result.forEach(market -> {
+                    assertNotNull(market.getTimestamp());
+                    System.out.printf("Rank: %s, ID: %s, Timestamp: %s%n",
+                            market.getRank(), market.getBaseId(), market.getTimestamp());
+                });
     }
 }
