@@ -17,7 +17,7 @@ public record RawMarketDTO(@Nonnull String exchangeId,
                      @Nonnull BigDecimal priceQuote,
                      @Nonnull BigDecimal priceUsd,
                      @Nonnull BigDecimal volumeUsd24Hr,
-                     @Nonnull BigDecimal percentExchangeVolume,
+                     @Nullable BigDecimal percentExchangeVolume,
                      @Nullable Integer tradesCount24Hr,
                      @Nonnull Long updated,
                      @Nullable Long timestamp)
