@@ -21,13 +21,33 @@ public class IngestionDataServiceImpl implements IngestionDataService {
 
     @Override
     public List<ProcessableMarketDTO> getAllData() {
-        return ingestionRepository.findAll()
-                .stream()
+        List<RawMarketModel> allModels = ingestionRepository.findAll();
+
+        List<RawMarketModel> modelsWithNullTimestamps = allModels.stream()
+                .filter(model -> model.getTimestamp() == null)
+                .toList();
+
+        if (!modelsWithNullTimestamps.isEmpty()) {
+            log.warn("{} out of {} market models have null timestamps",
+                    modelsWithNullTimestamps.size(), allModels.size());
+
+            modelsWithNullTimestamps.forEach(model ->
+                    log.warn("Null timestamp in model: id={}, exchangeId={}, baseSymbol={}, quoteSymbol={}",
+                            model.getId(), model.getExchangeId(),
+                            model.getBaseSymbol(), model.getQuoteSymbol())
+            );
+        }
+
+        List<RawMarketModel> validModels = allModels.stream()
+                .filter(model -> model.getTimestamp() != null)
+                .toList();
+
+        return validModels.stream()
                 .map(this::convertData)
                 .toList();
     }
 
-    private ProcessableMarketDTO convertData(@Nonnull RawMarketModel models) {
-        return mapper.INSTANCE.modelToDTO(models);
+    private ProcessableMarketDTO convertData(@Nonnull RawMarketModel model) {
+        return mapper.INSTANCE.modelToDTO(model);
     }
 }

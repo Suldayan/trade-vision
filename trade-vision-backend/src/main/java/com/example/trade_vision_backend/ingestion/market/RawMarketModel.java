@@ -48,7 +48,7 @@ public class RawMarketModel {
     @Column(name = "volume_usd_24hr", nullable = false)
     private BigDecimal volumeUsd24Hr;
 
-    @Column(name = "percent_exchange_volume", nullable = false)
+    @Column(name = "percent_exchange_volume")
     private BigDecimal percentExchangeVolume;
 
     @Column(name = "trades_count_24hr")
