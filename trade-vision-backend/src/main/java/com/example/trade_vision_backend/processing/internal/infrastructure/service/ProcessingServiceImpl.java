@@ -1,7 +1,6 @@
 package com.example.trade_vision_backend.processing.internal.infrastructure.service;
 
 import com.example.trade_vision_backend.ingestion.ProcessableMarketDTO;
-import com.example.trade_vision_backend.ingestion.market.RawMarketModel;
 import com.example.trade_vision_backend.processing.ProcessedMarketModel;
 import com.example.trade_vision_backend.processing.internal.infrastructure.db.ProcessingRepository;
 import com.example.trade_vision_backend.processing.internal.infrastructure.exception.ProcessingException;
@@ -16,7 +15,6 @@ import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 

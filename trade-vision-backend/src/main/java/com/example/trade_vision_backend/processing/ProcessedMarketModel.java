@@ -40,9 +40,6 @@ public class ProcessedMarketModel {
         @Column(name = "timestamp", nullable = false)
         private ZonedDateTime timestamp;
 
-        @Column(name = "version")
-        private Version version;
-
         @Column(name = "created_at")
         private Instant createdAt;
 }

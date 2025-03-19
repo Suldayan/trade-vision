@@ -20,4 +20,6 @@ public record ProcessableMarketDTO(@Nonnull String exchangeId,
                                    @Nullable Integer tradesCount24Hr,
                                    @Nonnull Long updated,
                                    @Nonnull Long timestamp)
-{}
+{
+
+}
