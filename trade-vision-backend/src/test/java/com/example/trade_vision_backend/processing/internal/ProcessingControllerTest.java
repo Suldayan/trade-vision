@@ -1,6 +1,8 @@
 package com.example.trade_vision_backend.processing.internal;
 
+import com.example.trade_vision_backend.processing.ProcessedMarketDTO;
 import com.example.trade_vision_backend.processing.ProcessedMarketModel;
+import com.example.trade_vision_backend.processing.ProcessingDataService;
 import com.example.trade_vision_backend.processing.internal.infrastructure.controller.ProcessingController;
 import com.example.trade_vision_backend.processing.internal.infrastructure.db.ProcessingRepository;
 import com.example.trade_vision_backend.processing.internal.infrastructure.service.ProcessingService;
@@ -31,32 +33,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 public class ProcessingControllerTest {
     @Mock
-    private ProcessingRepository repository;
-
-    @Mock
-    private ProcessingService service;
+    private ProcessingDataService processingDataService;
 
     @InjectMocks
     private ProcessingController processingController;
 
     private MockMvc mvc;
 
-    private JacksonTester<List<ProcessedMarketModel>> jsonMarketModel;
+    private JacksonTester<List<ProcessedMarketDTO>> jsonMarketModel;
 
     private final ZonedDateTime TIMESTAMP = ZonedDateTime.now().minusMonths(6);
 
-    private final List<ProcessedMarketModel> batch = new ArrayList<>();
+    private final List<ProcessedMarketDTO> batch = new ArrayList<>();
 
     private static final String BASE_URL = "/api/v1/processing";
-
-    @BeforeEach
-    public void deleteAllModelsInDatabase() {
-        repository.deleteAll();
-    }
 
     @BeforeEach
     public void setup() {
@@ -67,8 +62,7 @@ public class ProcessingControllerTest {
                 .build();
 
         for (int i = 0; i < 100; i++) {
-            ProcessedMarketModel model = ProcessedMarketModel.builder()
-                    .id(UUID.randomUUID())
+            ProcessedMarketDTO model = ProcessedMarketDTO.builder()
                     .baseId("BTC")
                     .priceUsd(new BigDecimal("45000.50"))
                     .updated(System.currentTimeMillis())
@@ -84,19 +78,16 @@ public class ProcessingControllerTest {
     @Test
     public void canRetrieveByTimestampWhenExistsOnAllEndpoint() throws Exception {
         // Seconds to subtract is equal to a year
-        long startDateMillis = Instant.now().minusSeconds(31536000).toEpochMilli();
-        long endDateMillis = Instant.now().toEpochMilli();
+        long zonedStartDate = Instant.now().minusSeconds(31536000).toEpochMilli();
+        long zonedEndDate = Instant.now().toEpochMilli();
 
-        ZonedDateTime zonedStartDate = ZonedDateTime.ofInstant(Instant.ofEpochMilli(startDateMillis), ZoneOffset.UTC);
-        ZonedDateTime zonedEndDate = ZonedDateTime.ofInstant(Instant.ofEpochMilli(endDateMillis), ZoneOffset.UTC);
-
-        given(repository.findAllByTimestampBetween(zonedStartDate ,zonedEndDate))
-                .willReturn(batch);
+        when(processingDataService.fetchAllMarketModelsByTimeRange(zonedStartDate, zonedEndDate))
+                .thenReturn(batch);
 
         MockHttpServletResponse response = mvc.perform(
                         MockMvcRequestBuilders.get(BASE_URL + "/all")
-                                .param("startDate", String.valueOf(startDateMillis))
-                                .param("endDate", String.valueOf(endDateMillis))
+                                .param("startDate", String.valueOf(zonedStartDate))
+                                .param("endDate", String.valueOf(zonedEndDate))
                                 .accept(MediaType.APPLICATION_JSON))
                 .andReturn().getResponse();
 
@@ -114,8 +105,6 @@ public class ProcessingControllerTest {
     public void returnsEmptySetOnNonExistingTimestampedDataOnAllEndpoint() throws Exception {
         long startDateMillis = Instant.now().minusSeconds(1000).toEpochMilli();
         long endDateMillis = Instant.now().toEpochMilli();
-
-        repository.saveAll(batch);
 
         MockHttpServletResponse response = mvc.perform(
                         MockMvcRequestBuilders.get(BASE_URL + "/all")
