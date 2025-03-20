@@ -11,11 +11,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
-import java.time.Instant;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -23,6 +20,7 @@ import java.util.stream.Collectors;
 public class ProcessingDataServiceImpl implements ProcessingDataService {
     private final ProcessingRepository repository;
     private final ProcessingMapper mapper;
+    private final ProcessingService processingService;
 
     @Nonnull
     @Override
@@ -30,18 +28,18 @@ public class ProcessingDataServiceImpl implements ProcessingDataService {
             @Valid @Nonnull Long startDate,
             @Valid @Nonnull Long endDate) throws IllegalArgumentException {
 
-        validateTimestamps(startDate, endDate);
-        ZonedDateTime zonedStartDate = convertLongToZonedDateTime(startDate);
-        ZonedDateTime zonedEndDate = convertLongToZonedDateTime(endDate);
+        processingService.validateTimestamps(startDate, endDate);
+        ZonedDateTime zonedStartDate = processingService.convertLongToZonedDateTime(startDate);
+        ZonedDateTime zonedEndDate = processingService.convertLongToZonedDateTime(endDate);
 
         log.info("Fetching market models between {} and {}", zonedStartDate, zonedEndDate);
         List<ProcessedMarketModel> marketModels = repository.findAllByTimestampBetween(zonedStartDate, zonedEndDate);
-        if (isEmpty(marketModels)) {
+        if (marketModels.isEmpty()) {
             log.info("Market Models don't exist within: {} - {}, returning empty data",startDate, endDate);
             return Collections.emptyList();
         }
 
-        List<ProcessedMarketModel> sortedModels = sortMarketModelsByTimestamp(marketModels);
+        List<ProcessedMarketModel> sortedModels = processingService.sortMarketModelsByTimestamp(marketModels);
         return convertToDto(sortedModels);
     }
 
@@ -52,18 +50,18 @@ public class ProcessingDataServiceImpl implements ProcessingDataService {
             @Valid @Nonnull Long endDate,
             @Valid @Nonnull String id) throws IllegalArgumentException {
 
-        validateTimestamps(startDate, endDate);
-        ZonedDateTime start = convertLongToZonedDateTime(startDate);
-        ZonedDateTime end = convertLongToZonedDateTime(endDate);
+        processingService.validateTimestamps(startDate, endDate);
+        ZonedDateTime start = processingService.convertLongToZonedDateTime(startDate);
+        ZonedDateTime end = processingService.convertLongToZonedDateTime(endDate);
 
         log.debug("Fetching base market models between {} and {} with id: {}",
                 start, end, id);
         List<ProcessedMarketModel> marketModels = repository.findByBaseIdAndTimestampBetween(id, start, end);
-        if (isEmpty(marketModels)) {
+        if (marketModels.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<ProcessedMarketModel> sortedModels = sortMarketModelsByTimestamp(marketModels);
+        List<ProcessedMarketModel> sortedModels = processingService.sortMarketModelsByTimestamp(marketModels);
         return convertToDto(sortedModels);
     }
 
@@ -74,18 +72,18 @@ public class ProcessingDataServiceImpl implements ProcessingDataService {
             @Valid @Nonnull Long endDate,
             @Valid @Nonnull String id) throws IllegalArgumentException {
 
-        validateTimestamps(startDate, endDate);
-        ZonedDateTime start = convertLongToZonedDateTime(startDate);
-        ZonedDateTime end = convertLongToZonedDateTime(endDate);
+        processingService.validateTimestamps(startDate, endDate);
+        ZonedDateTime start = processingService.convertLongToZonedDateTime(startDate);
+        ZonedDateTime end = processingService.convertLongToZonedDateTime(endDate);
 
         log.debug("Fetching quote market models between {} and {} with id: {}",
                 start, end, id);
         List<ProcessedMarketModel> marketModels = repository.findByQuoteIdAndTimestampBetween(id, start, end);
-        if (isEmpty(marketModels)) {
+        if (marketModels.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<ProcessedMarketModel> sortedModels = sortMarketModelsByTimestamp(marketModels);
+        List<ProcessedMarketModel> sortedModels = processingService.sortMarketModelsByTimestamp(marketModels);
         return convertToDto(sortedModels);
     }
 
@@ -96,41 +94,19 @@ public class ProcessingDataServiceImpl implements ProcessingDataService {
             @Valid @Nonnull Long endDate,
             @Valid @Nonnull String id) throws IllegalArgumentException {
 
-        validateTimestamps(startDate, endDate);
-        ZonedDateTime start = convertLongToZonedDateTime(startDate);
-        ZonedDateTime end = convertLongToZonedDateTime(endDate);
+        processingService.validateTimestamps(startDate, endDate);
+        ZonedDateTime start = processingService.convertLongToZonedDateTime(startDate);
+        ZonedDateTime end = processingService.convertLongToZonedDateTime(endDate);
 
         log.debug("Fetching exchange market models between {} and {} with id: {}",
                 start, end, id);
         List<ProcessedMarketModel> marketModels = repository.findByExchangeIdAndTimestampBetween(id, start, end);
-        if (isEmpty(marketModels)) {
+        if (marketModels.isEmpty()) {
             return Collections.emptyList();
         }
 
-        List<ProcessedMarketModel> sortedModels = sortMarketModelsByTimestamp(marketModels);
+        List<ProcessedMarketModel> sortedModels = processingService.sortMarketModelsByTimestamp(marketModels);
         return convertToDto(sortedModels);
-    }
-
-    private boolean isEmpty(@Nonnull List<ProcessedMarketModel> marketModels) {
-        return marketModels.isEmpty();
-    }
-
-    private void validateTimestamps(@Nonnull Long start, @Nonnull Long end) throws IllegalArgumentException {
-        if (start >= end) {
-            throw new IllegalArgumentException("Start date must be before end date");
-        }
-    }
-
-    @Nonnull
-    private List<ProcessedMarketModel> sortMarketModelsByTimestamp(@Nonnull List<ProcessedMarketModel> marketModels) {
-        return marketModels.stream()
-                .sorted(Comparator.comparing(ProcessedMarketModel::getTimestamp))
-                .collect(Collectors.toCollection(LinkedList::new));
-    }
-
-    @Nonnull
-    private ZonedDateTime convertLongToZonedDateTime(@Nonnull Long date) {
-        return ZonedDateTime.ofInstant(Instant.ofEpochMilli(date), ZoneOffset.UTC);
     }
 
     @Nonnull

@@ -3,6 +3,7 @@ package com.example.trade_vision_backend.processing.internal;
 import com.example.trade_vision_backend.processing.ProcessedMarketModel;
 import com.example.trade_vision_backend.processing.internal.infrastructure.controller.ProcessingController;
 import com.example.trade_vision_backend.processing.internal.infrastructure.db.ProcessingRepository;
+import com.example.trade_vision_backend.processing.internal.infrastructure.service.ProcessingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,6 +36,9 @@ import static org.mockito.BDDMockito.given;
 public class ProcessingControllerTest {
     @Mock
     private ProcessingRepository repository;
+
+    @Mock
+    private ProcessingService service;
 
     @InjectMocks
     private ProcessingController processingController;
@@ -78,7 +82,7 @@ public class ProcessingControllerTest {
     }
 
     @Test
-    void canRetrieveByTimestampWhenExistsOnAllEndpoint() throws Exception {
+    public void canRetrieveByTimestampWhenExistsOnAllEndpoint() throws Exception {
         // Seconds to subtract is equal to a year
         long startDateMillis = Instant.now().minusSeconds(31536000).toEpochMilli();
         long endDateMillis = Instant.now().toEpochMilli();
@@ -107,7 +111,7 @@ public class ProcessingControllerTest {
 
     @Transactional
     @Test
-    void returnsEmptySetOnNonExistingTimestampedDataOnAllEndpoint() throws Exception {
+    public void returnsEmptySetOnNonExistingTimestampedDataOnAllEndpoint() throws Exception {
         long startDateMillis = Instant.now().minusSeconds(1000).toEpochMilli();
         long endDateMillis = Instant.now().toEpochMilli();
 
