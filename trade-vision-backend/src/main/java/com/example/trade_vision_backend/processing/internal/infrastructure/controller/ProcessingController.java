@@ -13,10 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.LinkedHashSet;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -29,7 +26,7 @@ public class ProcessingController {
     private final ProcessingRepository repository;
 
     @GetMapping("/all")
-    ResponseEntity<Set<ProcessedMarketModel>> fetchAllMarketModelsByTimeRange(
+    ResponseEntity<List<ProcessedMarketModel>> fetchAllMarketModelsByTimeRange(
             @RequestParam @Valid @Nonnull Long startDate,
             @RequestParam @Valid @Nonnull Long endDate) throws IllegalArgumentException {
 
@@ -38,80 +35,17 @@ public class ProcessingController {
         ZonedDateTime zonedEndDate = convertLongToZonedDateTime(endDate);
 
         log.info("Fetching market models between {} and {}", zonedStartDate, zonedEndDate);
-        Set<ProcessedMarketModel> marketModels = repository.findAllByTimestampBetween(zonedStartDate, zonedEndDate);
+        List<ProcessedMarketModel> marketModels = repository.findAllByTimestampBetween(zonedStartDate, zonedEndDate);
         if (isEmpty(marketModels)) {
             log.info("Market Models don't exist within: {} - {}, returning empty data",startDate, endDate);
-            return ResponseEntity.ok(Collections.emptySet());
+            return ResponseEntity.ok(Collections.emptyList());
         }
-        Set<ProcessedMarketModel> sortedMarketModels = sortMarketModelsByTimestamp(marketModels);
+        List<ProcessedMarketModel> sortedMarketModels = sortMarketModelsByTimestamp(marketModels);
 
         return ResponseEntity.ok(sortedMarketModels);
     }
 
-    @GetMapping("/base/{id}")
-    ResponseEntity<Set<ProcessedMarketModel>> fetchModelByBaseIdAndTimeRange(
-            @RequestParam @Valid @Nonnull Long startDate,
-            @RequestParam @Valid @Nonnull Long endDate,
-            @PathVariable @Valid @Nonnull String id) throws IllegalArgumentException {
-
-        validateTimestamps(startDate, endDate);
-        ZonedDateTime start = convertLongToZonedDateTime(startDate);
-        ZonedDateTime end = convertLongToZonedDateTime(endDate);
-
-        log.debug("Fetching base market models between {} and {} with id: {}",
-                start, end, id);
-        Set<ProcessedMarketModel> marketModels = repository.findByBaseIdAndTimestampBetween(id, start, end);
-        if (isEmpty(marketModels)) {
-            return ResponseEntity.ok(Collections.emptySet());
-        }
-        Set<ProcessedMarketModel> sortedMarketModels = sortMarketModelsByTimestamp(marketModels);
-
-        return ResponseEntity.ok(sortedMarketModels);
-    }
-
-    @GetMapping("/quote/{id}")
-    ResponseEntity<Set<ProcessedMarketModel>> fetchModelByQuoteIdAndTimeRange(
-            @RequestParam @Valid @Nonnull Long startDate,
-            @RequestParam @Valid @Nonnull Long endDate,
-            @PathVariable @Valid @Nonnull String id) throws IllegalArgumentException {
-
-        validateTimestamps(startDate, endDate);
-        ZonedDateTime start = convertLongToZonedDateTime(startDate);
-        ZonedDateTime end = convertLongToZonedDateTime(endDate);
-
-        log.debug("Fetching quote market models between {} and {} with id: {}",
-                start, end, id);
-        Set<ProcessedMarketModel> marketModels = repository.findByQuoteIdAndTimestampBetween(id, start, end);
-        if (isEmpty(marketModels)) {
-            return ResponseEntity.ok(Collections.emptySet());
-        }
-        Set<ProcessedMarketModel> sortedMarketModels = sortMarketModelsByTimestamp(marketModels);
-
-        return ResponseEntity.ok(sortedMarketModels);
-    }
-
-    @GetMapping("/exchange/{id}")
-    ResponseEntity<Set<ProcessedMarketModel>> fetchModelByExchangeIdAndTimeRange(
-            @RequestParam @Valid @Nonnull Long startDate,
-            @RequestParam @Valid @Nonnull Long endDate,
-            @PathVariable @Valid @Nonnull String id) throws IllegalArgumentException {
-
-        validateTimestamps(startDate, endDate);
-        ZonedDateTime start = convertLongToZonedDateTime(startDate);
-        ZonedDateTime end = convertLongToZonedDateTime(endDate);
-
-        log.debug("Fetching exchange market models between {} and {} with id: {}",
-                start, end, id);
-        Set<ProcessedMarketModel> marketModels = repository.findByExchangeIdAndTimestampBetween(id, start, end);
-        if (isEmpty(marketModels)) {
-            return ResponseEntity.ok(Collections.emptySet());
-        }
-        Set<ProcessedMarketModel> sortedMarketModels = sortMarketModelsByTimestamp(marketModels);
-
-        return ResponseEntity.ok(sortedMarketModels);
-    }
-
-    private boolean isEmpty(@Nonnull Set<ProcessedMarketModel> marketModels) {
+    private boolean isEmpty(@Nonnull List<ProcessedMarketModel> marketModels) {
         return marketModels.isEmpty();
     }
 
@@ -122,10 +56,10 @@ public class ProcessingController {
     }
 
     @Nonnull
-    private Set<ProcessedMarketModel> sortMarketModelsByTimestamp(@Nonnull Set<ProcessedMarketModel> marketModels) {
+    private List<ProcessedMarketModel> sortMarketModelsByTimestamp(@Nonnull List<ProcessedMarketModel> marketModels) {
         return marketModels.stream()
                 .sorted(Comparator.comparing(ProcessedMarketModel::getTimestamp))
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+                .collect(Collectors.toCollection(LinkedList::new));
     }
 
     @Nonnull
