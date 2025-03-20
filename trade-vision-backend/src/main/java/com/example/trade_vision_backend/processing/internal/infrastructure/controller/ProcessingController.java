@@ -2,6 +2,7 @@ package com.example.trade_vision_backend.processing.internal.infrastructure.cont
 
 import com.example.trade_vision_backend.processing.ProcessedMarketModel;
 import com.example.trade_vision_backend.processing.internal.infrastructure.db.ProcessingRepository;
+import com.example.trade_vision_backend.processing.internal.infrastructure.service.ProcessingService;
 import jakarta.annotation.Nonnull;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -24,46 +25,25 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProcessingController {
     private final ProcessingRepository repository;
+    private final ProcessingService processingService;
 
     @GetMapping("/all")
     ResponseEntity<List<ProcessedMarketModel>> fetchAllMarketModelsByTimeRange(
             @RequestParam @Valid @Nonnull Long startDate,
             @RequestParam @Valid @Nonnull Long endDate) throws IllegalArgumentException {
 
-        validateTimestamps(startDate, endDate);
-        ZonedDateTime zonedStartDate = convertLongToZonedDateTime(startDate);
-        ZonedDateTime zonedEndDate = convertLongToZonedDateTime(endDate);
+        processingService.validateTimestamps(startDate, endDate);
+        ZonedDateTime zonedStartDate = processingService.convertLongToZonedDateTime(startDate);
+        ZonedDateTime zonedEndDate = processingService.convertLongToZonedDateTime(endDate);
 
         log.info("Fetching market models between {} and {}", zonedStartDate, zonedEndDate);
         List<ProcessedMarketModel> marketModels = repository.findAllByTimestampBetween(zonedStartDate, zonedEndDate);
-        if (isEmpty(marketModels)) {
+        if (marketModels.isEmpty()) {
             log.info("Market Models don't exist within: {} - {}, returning empty data",startDate, endDate);
             return ResponseEntity.ok(Collections.emptyList());
         }
-        List<ProcessedMarketModel> sortedMarketModels = sortMarketModelsByTimestamp(marketModels);
+        List<ProcessedMarketModel> sortedMarketModels = processingService.sortMarketModelsByTimestamp(marketModels);
 
         return ResponseEntity.ok(sortedMarketModels);
-    }
-
-    private boolean isEmpty(@Nonnull List<ProcessedMarketModel> marketModels) {
-        return marketModels.isEmpty();
-    }
-
-    private void validateTimestamps(@Nonnull Long start, @Nonnull Long end) throws IllegalArgumentException {
-        if (start >= end) {
-            throw new IllegalArgumentException("Start date must be before end date");
-        }
-    }
-
-    @Nonnull
-    private List<ProcessedMarketModel> sortMarketModelsByTimestamp(@Nonnull List<ProcessedMarketModel> marketModels) {
-        return marketModels.stream()
-                .sorted(Comparator.comparing(ProcessedMarketModel::getTimestamp))
-                .collect(Collectors.toCollection(LinkedList::new));
-    }
-
-    @Nonnull
-    private ZonedDateTime convertLongToZonedDateTime(@Nonnull Long date) {
-        return ZonedDateTime.ofInstant(Instant.ofEpochMilli(date), ZoneOffset.UTC);
     }
 }

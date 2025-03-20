@@ -14,6 +14,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.Comparator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -76,6 +78,27 @@ public class ProcessingServiceImpl implements ProcessingService {
         } catch (Exception ex) {
             throw new ProcessingException("Unexpected error occurred while saving processed data", ex);
         }
+    }
+
+    @Nonnull
+    @Override
+    public List<ProcessedMarketModel> sortMarketModelsByTimestamp(@Nonnull List<ProcessedMarketModel> marketModels) {
+        return marketModels.stream()
+                .sorted(Comparator.comparing(ProcessedMarketModel::getTimestamp))
+                .collect(Collectors.toCollection(LinkedList::new));
+    }
+
+    @Override
+    public void validateTimestamps(@Nonnull Long start, @Nonnull Long end) throws IllegalArgumentException {
+        if (start >= end) {
+            throw new IllegalArgumentException("Start date must be before end date");
+        }
+    }
+
+    @Nonnull
+    @Override
+    public ZonedDateTime convertLongToZonedDateTime(@Nonnull Long date) {
+        return ZonedDateTime.ofInstant(Instant.ofEpochMilli(date), ZoneOffset.UTC);
     }
 
     @Nonnull
