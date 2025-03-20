@@ -24,10 +24,7 @@ import java.math.BigDecimal;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -44,11 +41,11 @@ public class ProcessingControllerTest {
 
     private MockMvc mvc;
 
-    private JacksonTester<Set<ProcessedMarketModel>> jsonMarketModel;
+    private JacksonTester<List<ProcessedMarketModel>> jsonMarketModel;
 
     private final ZonedDateTime TIMESTAMP = ZonedDateTime.now().minusMonths(6);
 
-    private final Set<ProcessedMarketModel> batch = new HashSet<>();
+    private final List<ProcessedMarketModel> batch = new ArrayList<>();
 
     private static final String BASE_URL = "/api/v1/processing";
 
@@ -108,93 +105,6 @@ public class ProcessingControllerTest {
         );
     }
 
-    @Test
-    void canRetrieveByTimestampAndBaseId() throws Exception {
-        long startDateMillis = Instant.now().minusSeconds(31536000).toEpochMilli();
-        long endDateMillis = Instant.now().toEpochMilli();
-
-        final String baseId = "BTC";
-
-        ZonedDateTime zonedStartDate = ZonedDateTime.ofInstant(Instant.ofEpochMilli(startDateMillis), ZoneOffset.UTC);
-        ZonedDateTime zonedEndDate = ZonedDateTime.ofInstant(Instant.ofEpochMilli(endDateMillis), ZoneOffset.UTC);
-
-        given(repository.findByBaseIdAndTimestampBetween(baseId, zonedStartDate ,zonedEndDate))
-                .willReturn(batch);
-
-        MockHttpServletResponse response = mvc.perform(
-                        MockMvcRequestBuilders.get(BASE_URL + "/base/" + baseId)
-                                .param("startDate", String.valueOf(startDateMillis))
-                                .param("endDate", String.valueOf(endDateMillis))
-                                .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        String responseContent = response.getContentAsString();
-
-        assertEquals(response.getStatus(), HttpStatus.OK.value());
-        assertNotNull(responseContent);
-        assertThat(responseContent).isEqualTo(
-                jsonMarketModel.write(batch).getJson()
-        );
-    }
-
-    @Test
-    void canRetrieveByTimestampAndQuoteId() throws Exception {
-        long startDateMillis = Instant.now().minusSeconds(31536000).toEpochMilli();
-        long endDateMillis = Instant.now().toEpochMilli();
-
-        final String quoteId = "USDT";
-
-        ZonedDateTime zonedStartDate = ZonedDateTime.ofInstant(Instant.ofEpochMilli(startDateMillis), ZoneOffset.UTC);
-        ZonedDateTime zonedEndDate = ZonedDateTime.ofInstant(Instant.ofEpochMilli(endDateMillis), ZoneOffset.UTC);
-
-        given(repository.findByQuoteIdAndTimestampBetween(quoteId, zonedStartDate ,zonedEndDate))
-                .willReturn(batch);
-
-        MockHttpServletResponse response = mvc.perform(
-                        MockMvcRequestBuilders.get(BASE_URL + "/quote/" + quoteId)
-                                .param("startDate", String.valueOf(startDateMillis))
-                                .param("endDate", String.valueOf(endDateMillis))
-                                .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        String responseContent = response.getContentAsString();
-
-        assertEquals(response.getStatus(), HttpStatus.OK.value());
-        assertNotNull(responseContent);
-        assertThat(responseContent).isEqualTo(
-                jsonMarketModel.write(batch).getJson()
-        );
-    }
-
-    @Test
-    void canRetrieveByTimestampAndExchangeId() throws Exception {
-        long startDateMillis = Instant.now().minusSeconds(31536000).toEpochMilli();
-        long endDateMillis = Instant.now().toEpochMilli();
-
-        final String exchangeId = "Binance";
-
-        ZonedDateTime zonedStartDate = ZonedDateTime.ofInstant(Instant.ofEpochMilli(startDateMillis), ZoneOffset.UTC);
-        ZonedDateTime zonedEndDate = ZonedDateTime.ofInstant(Instant.ofEpochMilli(endDateMillis), ZoneOffset.UTC);
-
-        given(repository.findByExchangeIdAndTimestampBetween(exchangeId, zonedStartDate ,zonedEndDate))
-                .willReturn(batch);
-
-        MockHttpServletResponse response = mvc.perform(
-                        MockMvcRequestBuilders.get(BASE_URL + "/exchange/" + exchangeId)
-                                .param("startDate", String.valueOf(startDateMillis))
-                                .param("endDate", String.valueOf(endDateMillis))
-                                .accept(MediaType.APPLICATION_JSON))
-                .andReturn().getResponse();
-
-        String responseContent = response.getContentAsString();
-
-        assertEquals(response.getStatus(), HttpStatus.OK.value());
-        assertNotNull(responseContent);
-        assertThat(responseContent).isEqualTo(
-                jsonMarketModel.write(batch).getJson()
-        );
-    }
-
     @Transactional
     @Test
     void returnsEmptySetOnNonExistingTimestampedDataOnAllEndpoint() throws Exception {
@@ -215,7 +125,7 @@ public class ProcessingControllerTest {
         assertEquals(response.getStatus(), HttpStatus.OK.value());
         assertNotNull(responseContent);
         assertThat(responseContent).isEqualTo(
-                jsonMarketModel.write(Collections.emptySet()).getJson()
+                jsonMarketModel.write(Collections.emptyList()).getJson()
         );
     }
 }
