@@ -118,6 +118,7 @@ public class ProcessingServiceUnitTest {
                     "tether",
                     new BigDecimal("65000.00").add(new BigDecimal(i)),
                     1696252800000L + i,
+                    null,
                     ZonedDateTime.now(),
                     Instant.now()
             ));

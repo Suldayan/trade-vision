@@ -35,12 +35,13 @@ public class ProcessingServiceImpl implements ProcessingService {
         try {
             return processableMarketDTOS.stream()
                     .map(field -> new ProcessedMarketModel(
-                            UUID.randomUUID(),
+                            null,
                             field.baseId(),
                             field.quoteId(),
                             field.exchangeId(),
                             field.priceUsd(),
                             field.updated(),
+                            null,
                             transformTimestamp(timestamp),
                             Instant.now()
                     ))
@@ -74,7 +75,7 @@ public class ProcessingServiceImpl implements ProcessingService {
             processingRepository.saveAll(processedData);
             log.info("Successfully saved data list of size: {}", processedData.size());
         } catch (DataAccessException ex) {
-            throw new ProcessingException("", ex);
+            throw new ProcessingException("Data Access error occurred while attempting to save data", ex);
         } catch (Exception ex) {
             throw new ProcessingException("Unexpected error occurred while saving processed data", ex);
         }

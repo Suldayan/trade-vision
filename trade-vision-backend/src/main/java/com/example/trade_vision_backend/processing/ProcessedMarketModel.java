@@ -15,7 +15,6 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "processed_markets")
-@EqualsAndHashCode(of = {"baseId", "quoteId", "exchangeId"})
 public class ProcessedMarketModel {
         @Id
         @GeneratedValue(strategy = GenerationType.UUID)
@@ -36,6 +35,9 @@ public class ProcessedMarketModel {
 
         @Column(name = "updated", nullable = false)
         private Long updated;
+
+        @Column(name = "version")
+        private Version version;
 
         @Column(name = "timestamp", nullable = false)
         private ZonedDateTime timestamp;
