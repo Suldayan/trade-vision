@@ -36,6 +36,7 @@ public class ProcessedMarketModel {
         @Column(name = "updated", nullable = false)
         private Long updated;
 
+        @Version
         @Column(name = "version")
         private Version version;
 
