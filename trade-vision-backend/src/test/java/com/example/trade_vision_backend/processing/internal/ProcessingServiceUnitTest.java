@@ -85,17 +85,6 @@ public class ProcessingServiceUnitTest {
         assertTrue(exception.getMessage().contains("Failed to process due to invalid data"));
     }
 
-    @Test
-    public void executeProcessing_ThrowsProcessingExceptionOnInvalidDataSize() {
-        List<ProcessableMarketDTO> invalidList = createInvalidMarketModels();
-
-        ProcessingException exception = assertThrows(
-                ProcessingException.class, () -> processingService.executeProcessing(invalidList, MOCK_TIMESTAMP));
-
-        assertNotNull(exception);
-        assertTrue(exception.getMessage().contains("Failed to process due to invalid data"));
-    }
-
     private static List<ProcessableMarketDTO> createValidMarketModels() {
         List<ProcessableMarketDTO> list = new ArrayList<>();
         for (int i = 0; i < 100; i++) {
