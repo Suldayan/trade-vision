@@ -38,7 +38,7 @@ public class ProcessedMarketModel {
 
         @Version
         @Column(name = "version")
-        private Version version;
+        private Integer version;
 
         @Column(name = "timestamp", nullable = false)
         private ZonedDateTime timestamp;
