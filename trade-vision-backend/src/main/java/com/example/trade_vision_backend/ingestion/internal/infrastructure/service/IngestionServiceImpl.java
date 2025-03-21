@@ -46,6 +46,7 @@ public class IngestionServiceImpl implements IngestionService {
         }
     }
 
+    // TODO remove 100 list size check
     // TODO configure a retry
     @Transactional
     @Override
@@ -58,10 +59,18 @@ public class IngestionServiceImpl implements IngestionService {
                 return;
             }
 
-            // The goal is to save if the models don't exist, and update the fields if the models do exist
-            // This allows us to not have to constantly INSERT and DELETE all the time
-            List<RawMarketModel> updatedData = createNewUpdatedModelSet(latestFetchedData, repositoryModels);
+            Map<String, RawMarketModel> latestDataMap = createDataMap(latestFetchedData);
 
+            List<RawMarketModel> modelsToDelete = repositoryModels.stream()
+                    .filter(model -> !latestDataMap.containsKey(model.getBaseId()))
+                    .collect(Collectors.toList());
+
+            if (!modelsToDelete.isEmpty()) {
+                ingestionRepository.deleteAll(modelsToDelete);
+                log.info("Deleted {} obsolete models", modelsToDelete.size());
+            }
+
+            List<RawMarketModel> updatedData = createNewUpdatedModelSet(latestFetchedData, repositoryModels);
             ingestionRepository.saveAll(updatedData);
             log.info("Successfully updated and saved all data entries");
         } catch (DataAccessException ex) {

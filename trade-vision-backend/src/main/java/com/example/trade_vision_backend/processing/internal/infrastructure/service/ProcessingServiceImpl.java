@@ -116,9 +116,5 @@ public class ProcessingServiceImpl implements ProcessingService {
             // We throw an exception here because it's expected that there is data available at the given timestamp
             throw new IllegalArgumentException(String.format("Unable to push data forward due to empty market set for timestamp: %s", timestamp));
         }
-        if (processableMarketDTOS.size() != 100) {
-            throw new IllegalArgumentException(String.format("Market models with timestamp: %s fetched but is missing data with size: %s of expected size: 100",
-                    timestamp, processableMarketDTOS.size()));
-        }
     }
 }

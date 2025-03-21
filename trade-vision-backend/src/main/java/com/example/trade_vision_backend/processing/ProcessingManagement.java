@@ -22,8 +22,6 @@ public class ProcessingManagement {
     private final IngestionDataService ingestionDataService;
     private final ProcessingService processingService;
 
-    private static final Integer EXPECTED_SIZE = 100;
-
     @ApplicationModuleListener
     public void activateProcessing(@Nonnull IngestionCompleted ingestionCompleted) throws ProcessingException {
         List<ProcessableMarketDTO> unprocessedData = ingestionDataService.getAllData();
@@ -36,10 +34,6 @@ public class ProcessingManagement {
     private void validateMarkets(@Nonnull List<ProcessableMarketDTO> unprocessedData) {
         if (unprocessedData.isEmpty()) {
             throw new IllegalArgumentException("Expected data to be in the repository but nothing is available");
-        }
-        if (unprocessedData.size() != EXPECTED_SIZE) {
-            log.error("Data size returned as {}/100", unprocessedData.size());
-            throw new IllegalArgumentException("Data is not of valid size");
         }
     }
 }
