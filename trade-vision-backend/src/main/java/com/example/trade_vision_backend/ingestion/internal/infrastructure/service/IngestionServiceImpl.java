@@ -46,7 +46,6 @@ public class IngestionServiceImpl implements IngestionService {
         }
     }
 
-    // TODO remove 100 list size check
     // TODO configure a retry
     @Transactional
     @Override
@@ -59,10 +58,14 @@ public class IngestionServiceImpl implements IngestionService {
                 return;
             }
 
-            Map<String, RawMarketModel> latestDataMap = createDataMap(latestFetchedData);
+            Map<List<String>, RawMarketModel> latestDataMap = createDataMap(latestFetchedData);
 
             List<RawMarketModel> modelsToDelete = repositoryModels.stream()
-                    .filter(model -> !latestDataMap.containsKey(model.getBaseId()))
+                    .filter(model -> !latestDataMap.containsKey(
+                            List.of(
+                            model.getBaseId(),
+                            model.getQuoteId(),
+                            model.getExchangeId())))
                     .collect(Collectors.toList());
 
             if (!modelsToDelete.isEmpty()) {
@@ -81,10 +84,13 @@ public class IngestionServiceImpl implements IngestionService {
     }
 
     @Nonnull
-    private static <T extends RawMarketModel> Map<String, T> createDataMap(@Nonnull Collection<T> data) {
+    private static <T extends RawMarketModel> Map<List<String>, T> createDataMap(@Nonnull Collection<T> data) {
         return data.stream()
                 .collect(Collectors.toMap(
-                        T::getBaseId,
+                        model -> List.of(
+                                model.getBaseId(),
+                                model.getQuoteId(),
+                                model.getExchangeId()),
                         model -> model,
                         (existing, replacement) -> replacement
                 ));
@@ -95,16 +101,16 @@ public class IngestionServiceImpl implements IngestionService {
             @Nonnull List<RawMarketModel> latestFetchedData,
             @Nonnull List<RawMarketModel> repositoryModels
     ) {
-        Map<String, RawMarketModel> mapForLatestData = createDataMap(latestFetchedData);
-        Map<String, RawMarketModel> mapForRepositoryData = createDataMap(repositoryModels);
+        Map<List<String>, RawMarketModel> mapForLatestData = createDataMap(latestFetchedData);
+        Map<List<String>, RawMarketModel> mapForRepositoryData = createDataMap(repositoryModels);
         List<RawMarketModel> updatedData = new ArrayList<>();
 
-        for (Map.Entry<String, RawMarketModel> entry : mapForLatestData.entrySet()) {
-            String baseId = entry.getKey();
+        for (Map.Entry<List<String>, RawMarketModel> entry : mapForLatestData.entrySet()) {
+            List<String> ids = entry.getKey();
             RawMarketModel latestModel = entry.getValue();
 
-            if (mapForRepositoryData.containsKey(baseId)) {
-                RawMarketModel existingModel = mapForRepositoryData.get(baseId);
+            if (mapForRepositoryData.containsKey(ids)) {
+                RawMarketModel existingModel = mapForRepositoryData.get(ids);
                 updateModelFields(existingModel, latestModel);
                 updatedData.add(existingModel);
             } else {
