@@ -20,9 +20,14 @@ public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageServic
     @Override
     public BigDecimal sumClosingPrice(
             @Nonnull Long startDate,
-            @Nonnull Long endDate
+            @Nonnull Long endDate,
+            @Nonnull List<String> ids
     ) {
-        List<ProcessedMarketDTO> models = processingDataService.fetchAllMarketModelsByTimeRange(startDate, endDate);
+        if (ids.isEmpty()) {
+            // Empty ids indicate that the user wants to see all models
+            List<ProcessedMarketDTO> models = processingDataService.fetchAllMarketModelsByTimeRange(startDate, endDate);
+        }
+
         return null;
     }
 

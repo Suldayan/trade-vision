@@ -25,7 +25,7 @@ public class ProcessingManagement {
     @ApplicationModuleListener
     public void activateProcessing(@Nonnull IngestionCompleted ingestionCompleted) throws ProcessingException {
         List<ProcessableMarketDTO> unprocessedData = ingestionDataService.getAllData();
-        final Long timestamp = ingestionCompleted.ingestedTimestamp();;
+        final Long timestamp = ingestionCompleted.ingestedTimestamp();
         validateMarkets(unprocessedData);
         log.info("Processing has been triggered for data of timestamp: {}", timestamp);
         processingService.executeProcessing(unprocessedData, timestamp);

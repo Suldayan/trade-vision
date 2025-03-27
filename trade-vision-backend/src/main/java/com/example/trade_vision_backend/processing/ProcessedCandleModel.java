@@ -30,14 +30,8 @@ public class ProcessedCandleModel {
     @Column(name = "exchange_id", nullable = false)
     private String exchangeId;
 
-    @Column(name = "price_usd", nullable = false)
-    private BigDecimal priceUsd;
-
     @Column(name = "closing_price_usd")
     private BigDecimal closingPriceUsd;
-
-    @Column(name = "updated", nullable = false)
-    private Long updated;
 
     @Version
     @Column(name = "version")
