@@ -1,7 +1,10 @@
 package com.example.trade_vision_backend.processing.internal.infrastructure.service;
 
 import com.example.trade_vision_backend.ingestion.ProcessableMarketDTO;
+import com.example.trade_vision_backend.processing.ProcessedCandleModel;
+import com.example.trade_vision_backend.processing.ProcessedDTO;
 import com.example.trade_vision_backend.processing.ProcessedMarketModel;
+import com.example.trade_vision_backend.processing.internal.infrastructure.db.CandleRepository;
 import com.example.trade_vision_backend.processing.internal.infrastructure.db.ProcessingRepository;
 import com.example.trade_vision_backend.processing.internal.infrastructure.exception.ProcessingException;
 import jakarta.annotation.Nonnull;
@@ -11,13 +14,10 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.ZoneOffset;
-import java.time.ZonedDateTime;
+import java.time.*;
 import java.util.Comparator;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class ProcessingServiceImpl implements ProcessingService {
     private final ProcessingRepository processingRepository;
+    private final CandleRepository candleRepository;
 
     @Nonnull
     @Override
@@ -72,6 +73,13 @@ public class ProcessingServiceImpl implements ProcessingService {
     @Override
     public void saveProcessedData(List<ProcessedMarketModel> processedData) throws ProcessingException {
         try {
+            ZoneId timestamp = processedData.getFirst().getTimestamp().getZone();
+            if (isWithinMidnightInterval(timestamp)) {
+                List<ProcessedCandleModel> candleModels = convertToCandleModel(processedData);
+                candleRepository.saveAll(candleModels);
+                log.info("Processed data converted into a candle market");
+            }
+
             processingRepository.saveAll(processedData);
             log.info("Successfully saved data list of size: {}", processedData.size());
         } catch (DataAccessException ex) {
@@ -103,6 +111,21 @@ public class ProcessingServiceImpl implements ProcessingService {
     }
 
     @Nonnull
+    private static List<ProcessedCandleModel> convertToCandleModel(@Nonnull List<ProcessedMarketModel> marketModels) {
+        return marketModels.stream()
+                .map(model -> new ProcessedCandleModel(
+                        null,
+                        model.getBaseId(),
+                        model.getQuoteId(),
+                        model.getExchangeId(),
+                        model.getPriceUsd(),
+                        null,
+                        model.getTimestamp(),
+                        Instant.now()
+                )).toList();
+    }
+
+    @Nonnull
     private ZonedDateTime transformTimestamp(@Nonnull Long timestamp) {
         return ZonedDateTime.ofInstant(
                 Instant.ofEpochMilli(timestamp),
@@ -117,5 +140,15 @@ public class ProcessingServiceImpl implements ProcessingService {
             // We throw an exception here because it's expected that there is data available at the given timestamp
             throw new IllegalArgumentException(String.format("Unable to push data forward due to empty market set for timestamp: %s", timestamp));
         }
+    }
+
+    private static boolean isWithinMidnightInterval(ZoneId zone) {
+        ZonedDateTime now = ZonedDateTime.now(zone);
+        ZonedDateTime midnight = now.with(LocalTime.MIDNIGHT);
+
+        ZonedDateTime intervalStart = midnight.minusMinutes(15);
+        ZonedDateTime intervalEnd = midnight.plusMinutes(15);
+
+        return now.isAfter(intervalStart) && now.isBefore(intervalEnd);
     }
 }
