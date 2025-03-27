@@ -1,8 +1,10 @@
 package com.example.trade_vision_backend.processing.internal.infrastructure.mapper;
 
+import com.example.trade_vision_backend.processing.ProcessedCandleModel;
 import com.example.trade_vision_backend.processing.ProcessedMarketDTO;
 import com.example.trade_vision_backend.processing.ProcessedMarketModel;
 import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import java.util.List;
@@ -12,5 +14,12 @@ public interface ProcessingMapper {
     ProcessingMapper INSTANCE = Mappers.getMapper(ProcessingMapper.class);
 
     ProcessedMarketDTO entityToDto(ProcessedMarketModel processedMarketModel);
+
     List<ProcessedMarketDTO> entityListToDtoList(List<ProcessedMarketModel> processedMarketModels);
+
+    @Mapping(source = "processedMarketModel.priceUsd", target = "processedCandleModel.closingPriceUsd")
+    ProcessedCandleModel marketToCandleModel(ProcessedMarketModel processedMarketModel);
+
+    @Mapping(source = "processedMarketModel.priceUsd", target = "processedCandleModel.closingPriceUsd")
+    List<ProcessedCandleModel> marketListToCandleList(List<ProcessedMarketModel> processedMarketModels);
 }
