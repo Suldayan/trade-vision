@@ -16,10 +16,4 @@ public interface ProcessingMapper {
     ProcessedMarketDTO entityToDto(ProcessedMarketModel processedMarketModel);
 
     List<ProcessedMarketDTO> entityListToDtoList(List<ProcessedMarketModel> processedMarketModels);
-
-    @Mapping(source = "processedMarketModel.priceUsd", target = "processedCandleModel.closingPriceUsd")
-    ProcessedCandleModel marketToCandleModel(ProcessedMarketModel processedMarketModel);
-
-    @Mapping(source = "processedMarketModel.priceUsd", target = "processedCandleModel.closingPriceUsd")
-    List<ProcessedCandleModel> marketListToCandleList(List<ProcessedMarketModel> processedMarketModels);
 }
