@@ -19,10 +19,13 @@ import java.util.Optional;
 @Slf4j
 @RequiredArgsConstructor
 public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageService {
+    private final ProcessingDataService processingDataService;
+
+    private static final int QUOTE_IDX = 1;
+    private static final int EXCHANGE_IDX = 2;
+    private static final int EXPECTED_ID_SIZE = 3;
     private static final int SCALE = 4;
     private static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_UP;
-
-    private final ProcessingDataService processingDataService;
 
     @Override
     public BigDecimal sumClosingPrice(
@@ -32,8 +35,8 @@ public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageServic
         validateInputIds(ids);
 
         final String baseId = ids.getFirst();
-        final String quoteId = ids.get(1);
-        final String exchangeId = ids.getLast();
+        final String quoteId = ids.get(QUOTE_IDX);
+        final String exchangeId = ids.get(EXCHANGE_IDX);
 
         List<CandleDTO> candleDTOS = fetchCandleData(baseId, quoteId, exchangeId, endDate);
         log.info("Fetched {} candle records for calculation", candleDTOS.size());
@@ -100,7 +103,7 @@ public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageServic
     }
 
     private void validateInputIds(List<String> ids) {
-        if (ids == null || ids.size() < 3) {
+        if (ids == null || ids.size() < EXPECTED_ID_SIZE) {
             throw new IllegalArgumentException("Invalid input: Requires at least 3 IDs (base, quote, exchange)");
         }
     }
