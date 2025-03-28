@@ -47,7 +47,11 @@ public class ProcessingDataServiceImpl implements ProcessingDataService {
 
     @Nonnull
     @Override
-    public List<CandleDTO> fetchAllCandlePairsWithinTimeRange(String baseId, String quoteId, String exchangeId, ZonedDateTime endTime) {
+    public List<CandleDTO> fetchAllCandlePairsWithinTimeRange(
+            @Nonnull String baseId,
+            @Nonnull String quoteId,
+            @Nonnull String exchangeId,
+            @Nonnull ZonedDateTime endTime) {
         List<CandleModel> candleModels = candleRepository.findMarketPairWithinTimeRange(
                 baseId,
                 quoteId,
@@ -56,7 +60,7 @@ public class ProcessingDataServiceImpl implements ProcessingDataService {
                 endTime
         );
 
-        return candleMapper.entityListToDTOList(candleModels);
+        return candleMapper.INSTANCE.entityListToDTOList(candleModels);
     }
 
     @Nonnull

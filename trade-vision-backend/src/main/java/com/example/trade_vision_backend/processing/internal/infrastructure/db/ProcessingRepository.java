@@ -14,22 +14,4 @@ public interface ProcessingRepository extends JpaRepository<ProcessedMarketModel
     List<ProcessedMarketModel> findAllByTimestampBetween(
             ZonedDateTime startTimestamp,
             ZonedDateTime endTimestamp);
-
-    List<ProcessedMarketModel> findByBaseIdAndTimestampBetween(
-            String baseId,
-            ZonedDateTime startTimestamp,
-            ZonedDateTime endTimestamp
-    );
-
-    List<ProcessedMarketModel> findByQuoteIdAndTimestampBetween(
-            String quoteId,
-            ZonedDateTime startTimestamp,
-            ZonedDateTime endTimestamp
-    );
-
-    List<ProcessedMarketModel> findByExchangeIdAndTimestampBetween(
-            String exchangeId,
-            ZonedDateTime startTimestamp,
-            ZonedDateTime endTimestamp
-    );
 }
