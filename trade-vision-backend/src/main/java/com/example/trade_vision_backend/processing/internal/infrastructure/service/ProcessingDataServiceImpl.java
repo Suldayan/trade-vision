@@ -3,6 +3,7 @@ package com.example.trade_vision_backend.processing.internal.infrastructure.serv
 import com.example.trade_vision_backend.processing.ProcessedMarketDTO;
 import com.example.trade_vision_backend.processing.ProcessedMarketModel;
 import com.example.trade_vision_backend.processing.ProcessingDataService;
+import com.example.trade_vision_backend.processing.internal.infrastructure.db.CandleRepository;
 import com.example.trade_vision_backend.processing.internal.infrastructure.db.ProcessingRepository;
 import com.example.trade_vision_backend.processing.internal.infrastructure.mapper.ProcessingMapper;
 import jakarta.annotation.Nonnull;
@@ -19,6 +20,7 @@ import java.util.*;
 @RequiredArgsConstructor
 public class ProcessingDataServiceImpl implements ProcessingDataService {
     private final ProcessingRepository repository;
+    private final CandleRepository candleRepository;
     private final ProcessingMapper mapper;
     private final ProcessingService processingService;
 

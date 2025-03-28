@@ -1,7 +1,7 @@
 package com.example.trade_vision_backend.processing.internal.infrastructure.service;
 
 import com.example.trade_vision_backend.ingestion.ProcessableMarketDTO;
-import com.example.trade_vision_backend.processing.ProcessedCandleModel;
+import com.example.trade_vision_backend.processing.CandleModel;
 import com.example.trade_vision_backend.processing.ProcessedMarketModel;
 import com.example.trade_vision_backend.processing.internal.infrastructure.db.CandleRepository;
 import com.example.trade_vision_backend.processing.internal.infrastructure.db.ProcessingRepository;
@@ -74,7 +74,7 @@ public class ProcessingServiceImpl implements ProcessingService {
         try {
             ZoneId timestamp = processedData.getFirst().getTimestamp().getZone();
             if (isWithinMidnightInterval(timestamp)) {
-                List<ProcessedCandleModel> candleModels = convertToCandleModel(processedData);
+                List<CandleModel> candleModels = convertToCandleModel(processedData);
                 candleRepository.saveAll(candleModels);
                 log.info("Processed data converted into a candle market");
             }
@@ -110,9 +110,9 @@ public class ProcessingServiceImpl implements ProcessingService {
     }
 
     @Nonnull
-    private static List<ProcessedCandleModel> convertToCandleModel(@Nonnull List<ProcessedMarketModel> marketModels) {
+    private static List<CandleModel> convertToCandleModel(@Nonnull List<ProcessedMarketModel> marketModels) {
         return marketModels.stream()
-                .map(model -> new ProcessedCandleModel(
+                .map(model -> new CandleModel(
                         null,
                         model.getBaseId(),
                         model.getQuoteId(),

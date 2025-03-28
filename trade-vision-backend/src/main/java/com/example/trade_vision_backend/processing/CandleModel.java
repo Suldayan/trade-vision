@@ -15,7 +15,7 @@ import java.util.UUID;
 @Builder
 @Entity
 @Table(name = "candle_markets")
-public class ProcessedCandleModel {
+public class CandleModel {
     @Id
     @GeneratedValue(strategy = GenerationType.UUID)
     @Column(name = "id")

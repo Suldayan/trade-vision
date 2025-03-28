@@ -7,4 +7,5 @@ public interface ProcessingDataService {
     List<ProcessedMarketDTO> fetchModelByBaseIdAndTimeRange(Long startDate, Long endDate, String id) throws IllegalArgumentException;
     List<ProcessedMarketDTO> fetchModelByQuoteIdAndTimeRange(Long startDate, Long endDate, String id) throws IllegalArgumentException;
     List<ProcessedMarketDTO> fetchModelByExchangeIdAndTimeRange(Long startDate, Long endDate, String id) throws IllegalArgumentException;
+
 }
