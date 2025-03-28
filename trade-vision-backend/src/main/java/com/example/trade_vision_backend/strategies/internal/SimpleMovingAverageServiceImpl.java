@@ -31,7 +31,7 @@ public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageServic
     @Override
     public BigDecimal calculateSMA(
             @Nonnull ZonedDateTime endDate,
-            List<String> ids
+            @Nonnull List<String> ids
     ) {
         validateInputIds(ids);
 
@@ -47,10 +47,10 @@ public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageServic
 
     @Nonnull
     private List<CandleDTO> fetchCandleData(
-            String baseId,
-            String quoteId,
-            String exchangeId,
-            ZonedDateTime endDate
+            @Nonnull String baseId,
+            @Nonnull String quoteId,
+            @Nonnull String exchangeId,
+            @Nonnull ZonedDateTime endDate
     ) {
         try {
             List<CandleDTO> candleDTOS = processingDataService.fetchAllCandlePairsWithinTimeRange(

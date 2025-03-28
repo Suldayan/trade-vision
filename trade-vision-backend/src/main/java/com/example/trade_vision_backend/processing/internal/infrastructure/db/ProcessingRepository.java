@@ -11,6 +11,7 @@ import java.util.UUID;
 
 @Repository
 public interface ProcessingRepository extends JpaRepository<ProcessedMarketModel, UUID> {
+    //TODO update with JPQL
     List<ProcessedMarketModel> findAllByTimestampBetween(
             ZonedDateTime startTimestamp,
             ZonedDateTime endTimestamp);
