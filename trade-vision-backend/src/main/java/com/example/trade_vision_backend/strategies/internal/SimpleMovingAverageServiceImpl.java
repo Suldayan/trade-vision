@@ -27,10 +27,11 @@ public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageServic
     private static final int SCALE = 4;
     private static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_UP;
 
+    @Nonnull
     @Override
-    public BigDecimal sumClosingPrice(
+    public BigDecimal calculateSMA(
             @Nonnull ZonedDateTime endDate,
-            @Nonnull List<String> ids
+            List<String> ids
     ) {
         validateInputIds(ids);
 
@@ -41,31 +42,10 @@ public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageServic
         List<CandleDTO> candleDTOS = fetchCandleData(baseId, quoteId, exchangeId, endDate);
         log.info("Fetched {} candle records for calculation", candleDTOS.size());
 
-        return calculateSum(candleDTOS);
+        return calculateAverage(candleDTOS);
     }
 
     @Nonnull
-    @Override
-    public BigDecimal calculateAverage(@Nonnull List<CandleDTO> candleDTOS) {
-        validateCandleList(candleDTOS);
-
-        final int size = candleDTOS.size();
-
-        BigDecimal sum = Optional.of(candleDTOS)
-                .filter(list -> !list.isEmpty())
-                .map(list -> list.stream()
-                        .map(CandleDTO::closingPrice)
-                        .reduce(BigDecimal.ZERO, BigDecimal::add)
-                )
-                .orElseThrow(() -> new StrategyCalculationException("Cannot calculate average of empty list"));
-
-        return sum.divide(
-                BigDecimal.valueOf(size),
-                SCALE,
-                DEFAULT_ROUNDING
-        );
-    }
-
     private List<CandleDTO> fetchCandleData(
             String baseId,
             String quoteId,
@@ -92,14 +72,26 @@ public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageServic
         }
     }
 
-    private BigDecimal calculateSum(List<CandleDTO> candleDTOS) {
-        return Optional.of(candleDTOS)
+    @Nonnull
+    @Override
+    public BigDecimal calculateAverage(@Nonnull List<CandleDTO> candleDTOS) {
+        validateCandleList(candleDTOS);
+
+        final int size = candleDTOS.size();
+
+        BigDecimal sum = Optional.of(candleDTOS)
                 .filter(list -> !list.isEmpty())
                 .map(list -> list.stream()
                         .map(CandleDTO::closingPrice)
                         .reduce(BigDecimal.ZERO, BigDecimal::add)
                 )
-                .orElseThrow(() -> new StrategyCalculationException("Cannot calculate sum of empty list"));
+                .orElseThrow(() -> new StrategyCalculationException("Cannot calculate average of empty list"));
+
+        return sum.divide(
+                BigDecimal.valueOf(size),
+                SCALE,
+                DEFAULT_ROUNDING
+        );
     }
 
     private void validateInputIds(List<String> ids) {

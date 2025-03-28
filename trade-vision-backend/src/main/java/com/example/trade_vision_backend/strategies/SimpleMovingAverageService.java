@@ -7,6 +7,6 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 public interface SimpleMovingAverageService {
-    BigDecimal sumClosingPrice(ZonedDateTime endDate, List<String> ids);
+    BigDecimal calculateSMA(ZonedDateTime endDate, List<String> ids);
     BigDecimal calculateAverage(List<CandleDTO> candleDTOS);
 }
