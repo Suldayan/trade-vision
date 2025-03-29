@@ -11,5 +11,9 @@ public interface ExponentialMovingAverageService {
             int period
     );
 
-    List<BigDecimal> calculateEMAPoints();
+    List<BigDecimal> calculateEMASeries(
+            ZonedDateTime endDate,
+            List<String> ids,
+            int period
+    );
 }
