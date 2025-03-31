@@ -77,7 +77,7 @@ public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageServic
     public BigDecimal calculateAverage(@Nonnull List<CandleDTO> candleDTOS) {
         validateCandleList(candleDTOS);
 
-        final int size = candleDTOS.size();
+        final int size = getNumberOfPeriods(candleDTOS);
 
         BigDecimal sum = Optional.of(candleDTOS)
                 .filter(list -> !list.isEmpty())
@@ -92,6 +92,11 @@ public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageServic
                 SCALE,
                 DEFAULT_ROUNDING
         );
+    }
+
+    @Override
+    public final int getNumberOfPeriods(@Nonnull List<CandleDTO> candleDTOS) {
+        return candleDTOS.size();
     }
 
     private void validateInputIds(List<String> ids) {
