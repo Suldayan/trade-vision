@@ -1,6 +1,6 @@
 package com.example.trade_vision_backend.backtester.internal;
 
-import com.example.trade_vision_backend.backtester.StrategyEvent;
+import com.example.trade_vision_backend.backtester.BackTestEvent;
 import jakarta.annotation.Nonnull;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -25,7 +25,7 @@ public class BackTesterController {
         log.info("Publishing event with ids: {}, {}, {} with strategy: {} over {} days",
                 request.baseId(), request.quoteId(), request.exchangeId(), request.strategy(), request.window());
 
-        eventPublisher.publishEvent(new StrategyEvent(
+        eventPublisher.publishEvent(new BackTestEvent(
                 UUID.randomUUID(),
                 request.strategy(),
                 request.baseId(),

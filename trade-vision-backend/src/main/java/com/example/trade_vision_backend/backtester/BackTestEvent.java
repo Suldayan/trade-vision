@@ -5,7 +5,7 @@ import org.jmolecules.event.types.DomainEvent;
 
 import java.util.UUID;
 
-public record StrategyEvent(
+public record BackTestEvent(
         UUID id,
         @Nonnull String strategy,
         @Nonnull String baseId,
