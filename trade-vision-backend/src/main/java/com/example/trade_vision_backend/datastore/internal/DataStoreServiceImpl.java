@@ -1,11 +1,15 @@
 package com.example.trade_vision_backend.datastore.internal;
 
 import com.example.trade_vision_backend.datastore.DataStoreService;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.io.IOException;
 import java.util.Objects;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicReference;
@@ -14,37 +18,65 @@ import java.util.concurrent.atomic.AtomicReference;
 @Slf4j
 @RequiredArgsConstructor
 public class DataStoreServiceImpl implements DataStoreService {
-    private final AtomicReference<ConcurrentHashMap<String, Object>> store = new AtomicReference<>(new ConcurrentHashMap<>());
+    private final AtomicReference<ConcurrentHashMap<String, byte[]>> store =
+            new AtomicReference<>(new ConcurrentHashMap<>());
+    private final ObjectMapper objectMapper = new ObjectMapper();
 
     @Override
-    public <T> void set(
-            @Nonnull String key,
-            @Nonnull T value) {
+    public <T> void set(@Nonnull String key, @Nonnull T value) {
         Objects.requireNonNull(key, "Invalid key, can't be null");
+        Objects.requireNonNull(value, "Invalid value, can't be null");
 
-        ConcurrentHashMap<String, Object> currentMap = store.get();
-        currentMap.put(key, value);
-        store.set(currentMap);
-
-        log.info("Stored value for key: {}", key);
+        try {
+            byte[] serializedValue = objectMapper.writeValueAsBytes(value);
+            store.get().put(key, serializedValue);
+            log.info("Stored serialized value for key: {}", key);
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException("Failed to serialize value for key: " + key, e);
+        }
     }
 
     @Override
-    public Object get(@Nonnull String key) {
+    public <T> T get(@Nonnull String key, @Nonnull Class<T> type) {
         Objects.requireNonNull(key, "Invalid key, can't be null");
+        Objects.requireNonNull(type, "Invalid type, can't be null");
 
-        log.info("Retrieved value for key: {}", key);
-        return store.get().get(key);
+        byte[] serializedValue = store.get().get(key);
+        if (serializedValue == null) {
+            return null;
+        }
+
+        try {
+            T value = objectMapper.readValue(serializedValue, type);
+            log.info("Retrieved and deserialized value for key: {}", key);
+            return value;
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to deserialize value for key: " + key, e);
+        }
+    }
+
+    @Override
+    public <T> T get(@Nonnull String key, @Nonnull TypeReference<T> typeRef) {
+        Objects.requireNonNull(key, "Invalid key, can't be null");
+        Objects.requireNonNull(typeRef, "Invalid type reference, can't be null");
+
+        byte[] serializedValue = store.get().get(key);
+        if (serializedValue == null) {
+            return null;
+        }
+
+        try {
+            return objectMapper.readValue(serializedValue, typeRef);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to deserialize value for key: " + key, e);
+        }
     }
 
     @Override
     public boolean delete(@Nonnull String key) {
         Objects.requireNonNull(key, "Invalid key, can't be null");
 
-        ConcurrentHashMap<String, Object> currentMap = store.get();
-        Object removedValue = currentMap.remove(key);
-        store.set(currentMap);
-
+        byte[] removedValue = store.get().remove(key);
         boolean wasRemoved = (removedValue != null);
         log.debug("Delete operation for key {} {}", key, wasRemoved ? "succeeded" : "failed (key not found)");
         return wasRemoved;
@@ -61,4 +93,5 @@ public class DataStoreServiceImpl implements DataStoreService {
         store.set(new ConcurrentHashMap<>());
         log.info("Store cleared");
     }
+
 }
