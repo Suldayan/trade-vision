@@ -1,6 +1,7 @@
 package com.example.trade_vision_backend.backtester.internal;
 
 import com.example.trade_vision_backend.backtester.BackTestEvent;
+import com.example.trade_vision_backend.backtester.BackTesterManagement;
 import com.example.trade_vision_backend.datastore.DataStoreService;
 import jakarta.annotation.Nonnull;
 import jakarta.validation.Valid;
@@ -19,22 +20,27 @@ import java.util.UUID;
 @Validated
 @RequiredArgsConstructor
 public class BackTesterController {
-    private final ApplicationEventPublisher eventPublisher;
+    private final BackTesterManagement management;
     private final DataStoreService store;
 
     @PostMapping("/ema")
-    public ResponseEntity<String> ema(@Valid @Nonnull @RequestBody BackTestRequest request) {
-        log.info("Publishing event with ids: {}, {}, {} with strategy: {} over {} days",
-                request.baseId(), request.quoteId(), request.exchangeId(), request.strategy(), request.window());
+    public ResponseEntity<String> executeEmaStrategy(@Valid @Nonnull @RequestBody BackTestRequest request) {
+        final String baseId = request.baseId();
+        final String quoteId = request.quoteId();
+        final String exchangeId = request.exchangeId();
+        final String strategy = request.strategy();
+        final Long window = request.window();
 
-        eventPublisher.publishEvent(new BackTestEvent(
-                UUID.randomUUID(),
-                request.strategy(),
-                request.baseId(),
-                request.quoteId(),
-                request.exchangeId(),
-                request.window()
-        ));
+        log.info("Publishing event with ids: {}, {}, {} with strategy: {} over {} days",
+                baseId, quoteId, exchangeId, strategy, window);
+
+        management.complete(
+                strategy,
+                baseId,
+                quoteId,
+                exchangeId,
+                window
+        );
 
         return ResponseEntity.ok("");
     }
