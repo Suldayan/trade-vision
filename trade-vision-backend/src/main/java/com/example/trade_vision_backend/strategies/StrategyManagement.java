@@ -6,6 +6,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.modulith.events.ApplicationModuleListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 @Component
 @Slf4j
@@ -15,6 +16,7 @@ public class StrategyManagement {
 
     private static final String EMA = "Exponential Moving Average";
 
+    @Transactional
     @ApplicationModuleListener
     public void executeStrategy(@Nonnull BackTestEvent event) {
         final String strategy = event.strategy();
@@ -23,8 +25,6 @@ public class StrategyManagement {
         final String exchangeId = event.exchangeId();
         final Long window = event.window();
 
-        if (strategy.equals(EMA)) {
-            emaService.calculateEMA();
-        }
+
     }
 }

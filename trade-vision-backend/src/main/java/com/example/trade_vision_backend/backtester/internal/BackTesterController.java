@@ -1,6 +1,7 @@
 package com.example.trade_vision_backend.backtester.internal;
 
 import com.example.trade_vision_backend.backtester.BackTestEvent;
+import com.example.trade_vision_backend.datastore.DataStoreService;
 import jakarta.annotation.Nonnull;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BackTesterController {
     private final ApplicationEventPublisher eventPublisher;
+    private final DataStoreService store;
 
     @PostMapping("/ema")
     public ResponseEntity<String> ema(@Valid @Nonnull @RequestBody BackTestRequest request) {
