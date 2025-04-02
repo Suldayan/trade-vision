@@ -13,13 +13,13 @@ import java.util.UUID;
 @Repository
 public interface CandleRepository extends JpaRepository<CandleModel, UUID> {
 
-    @Query("SELECT m FROM ProcessedCandleModel m WHERE m.baseId = :base AND m.quoteId = :quote " +
-            "AND m.exchangeId = :exchange AND m.timeRange BETWEEN :startTime AND :endTime")
+    @Query("SELECT m FROM CandleModel m WHERE m.baseId = :base AND m.quoteId = :quote " +
+            "AND m.exchangeId = :exchange AND m.timestamp BETWEEN :startTime AND :endTime")
     List<CandleModel> findMarketPairWithinTimeRange(
             @Param("base") String baseId,
             @Param("quote") String quoteId,
             @Param("exchange") String exchangeId,
-            @Param("startTime") ZonedDateTime startTime, // will always be from now till
+            @Param("startTime") ZonedDateTime startTime,
             @Param("endTime") ZonedDateTime endTime
     );
 }
