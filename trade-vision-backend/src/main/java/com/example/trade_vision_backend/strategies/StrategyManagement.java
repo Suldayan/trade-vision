@@ -12,11 +12,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Slf4j
 @RequiredArgsConstructor
 public class StrategyManagement {
-    private final ExponentialMovingAverageService emaService;
-
     private static final String EMA = "Exponential Moving Average";
 
-    @Transactional
     @ApplicationModuleListener
     public void executeStrategy(@Nonnull BackTestEvent event) {
         final String strategy = event.strategy();
