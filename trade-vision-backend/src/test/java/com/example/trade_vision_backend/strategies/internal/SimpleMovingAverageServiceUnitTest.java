@@ -13,5 +13,5 @@ public class SimpleMovingAverageServiceUnitTest {
     private ProcessingDataService processingDataService;
 
     @InjectMocks
-    private SimpleMovingAverageServiceImpl service;
+    private SMAServiceImpl service;
 }

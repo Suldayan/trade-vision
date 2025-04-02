@@ -11,7 +11,9 @@ import org.springframework.stereotype.Component;
 @Slf4j
 @RequiredArgsConstructor
 public class StrategyManagement {
-    private static final String EMA = "Exponential Moving Average";
+    private final EMAService emaService;
+
+    private static final String EMA = "ema";
 
     @ApplicationModuleListener
     public void executeStrategy(@Nonnull BackTestEvent event) {
@@ -21,6 +23,13 @@ public class StrategyManagement {
         final String exchangeId = event.exchangeId();
         final Long window = event.window();
 
-
+        switch (strategy.toLowerCase()) {
+            case EMA -> emaService.calculateEMA(
+                    baseId,
+                    quoteId,
+                    exchangeId,
+                    window
+            );
+        }
     }
 }

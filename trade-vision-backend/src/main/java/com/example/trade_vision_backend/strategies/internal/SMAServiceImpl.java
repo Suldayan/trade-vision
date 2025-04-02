@@ -1,9 +1,8 @@
 package com.example.trade_vision_backend.strategies.internal;
 
 import com.example.trade_vision_backend.processing.CandleDTO;
-import com.example.trade_vision_backend.processing.ProcessedMarketDTO;
 import com.example.trade_vision_backend.processing.ProcessingDataService;
-import com.example.trade_vision_backend.strategies.SimpleMovingAverageService;
+import com.example.trade_vision_backend.strategies.SMAService;
 import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -18,28 +17,21 @@ import java.util.Optional;
 @Service
 @Slf4j
 @RequiredArgsConstructor
-public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageService {
+public class SMAServiceImpl implements SMAService {
     private final ProcessingDataService processingDataService;
 
-    private static final int QUOTE_IDX = 1;
-    private static final int EXCHANGE_IDX = 2;
-    private static final int EXPECTED_ID_SIZE = 3;
     private static final int SCALE = 4;
     private static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_UP;
 
     @Nonnull
     @Override
     public BigDecimal calculateSMA(
-            @Nonnull ZonedDateTime endDate,
-            @Nonnull List<String> ids
+            @Nonnull String baseId,
+            @Nonnull String quoteId,
+            @Nonnull String exchangeId,
+            @Nonnull ZonedDateTime window
     ) {
-        validateInputIds(ids);
-
-        final String baseId = ids.getFirst();
-        final String quoteId = ids.get(QUOTE_IDX);
-        final String exchangeId = ids.get(EXCHANGE_IDX);
-
-        List<CandleDTO> candleDTOS = fetchCandleData(baseId, quoteId, exchangeId, endDate);
+        List<CandleDTO> candleDTOS = fetchCandleData(baseId, quoteId, exchangeId, window);
         log.info("Fetched {} candle records for calculation", candleDTOS.size());
 
         return calculateAverage(candleDTOS);
@@ -50,18 +42,18 @@ public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageServic
             @Nonnull String baseId,
             @Nonnull String quoteId,
             @Nonnull String exchangeId,
-            @Nonnull ZonedDateTime endDate
+            @Nonnull ZonedDateTime window
     ) {
         try {
             List<CandleDTO> candleDTOS = processingDataService.fetchAllCandlePairsWithinTimeRange(
                     baseId,
                     quoteId,
                     exchangeId,
-                    endDate
+                    window
             );
             if (candleDTOS == null || candleDTOS.isEmpty()) {
                 log.warn("No candle data found for parameters: base={}, quote={}, exchange={}, endDate={}",
-                        baseId, quoteId, exchangeId, endDate);
+                        baseId, quoteId, exchangeId, window);
                 throw new StrategyCalculationException("No candle data available for calculation");
             }
 
@@ -97,12 +89,6 @@ public class SimpleMovingAverageServiceImpl implements SimpleMovingAverageServic
     @Override
     public final int getNumberOfPeriods(@Nonnull List<CandleDTO> candleDTOS) {
         return candleDTOS.size();
-    }
-
-    private void validateInputIds(List<String> ids) {
-        if (ids == null || ids.size() < EXPECTED_ID_SIZE) {
-            throw new IllegalArgumentException("Invalid input: Requires at least 3 IDs (base, quote, exchange)");
-        }
     }
 
     private void validateCandleList(List<CandleDTO> candleDTOS) {
