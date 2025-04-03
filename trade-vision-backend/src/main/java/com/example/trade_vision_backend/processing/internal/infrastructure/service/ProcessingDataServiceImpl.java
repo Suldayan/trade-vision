@@ -51,13 +51,14 @@ public class ProcessingDataServiceImpl implements ProcessingDataService {
             @Nonnull String baseId,
             @Nonnull String quoteId,
             @Nonnull String exchangeId,
-            @Nonnull ZonedDateTime endTime) {
+            int period) {
+        final ZonedDateTime window = convertPeriodToWindow(period);
         List<CandleModel> candleModels = candleRepository.findMarketPairWithinTimeRange(
                 baseId,
                 quoteId,
                 exchangeId,
                 ZonedDateTime.now(),
-                endTime
+                window
         );
 
         return candleMapper.INSTANCE.entityListToDTOList(candleModels);
@@ -66,5 +67,10 @@ public class ProcessingDataServiceImpl implements ProcessingDataService {
     @Nonnull
     private List<ProcessedMarketDTO> convertToDto(List<ProcessedMarketModel> marketModels) {
         return mapper.INSTANCE.entityListToDtoList(marketModels);
+    }
+
+    @Nonnull
+    private ZonedDateTime convertPeriodToWindow(int period) {
+        return ZonedDateTime.now().minusDays(period);
     }
 }

@@ -5,5 +5,5 @@ import java.util.List;
 
 public interface ProcessingDataService {
     List<ProcessedMarketDTO> fetchAllMarketModelsByTimeRange(Long startDate, Long endDate) throws IllegalArgumentException;
-    List<CandleDTO> fetchAllCandlePairsWithinTimeRange(String baseId, String quoteId, String exchangeId, ZonedDateTime endTime);
+    List<CandleDTO> fetchAllCandlePairsWithinTimeRange(String baseId, String quoteId, String exchangeId, int period);
 }
