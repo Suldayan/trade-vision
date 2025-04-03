@@ -1,18 +1,13 @@
 package com.example.trade_vision_backend.backtester.internal;
 
-import com.example.trade_vision_backend.backtester.BackTestEvent;
 import com.example.trade_vision_backend.backtester.BackTesterManagement;
-import com.example.trade_vision_backend.datastore.DataStoreService;
 import jakarta.annotation.Nonnull;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
-
-import java.util.UUID;
 
 @RestController
 @Slf4j
@@ -21,7 +16,6 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BackTesterController {
     private final BackTesterManagement management;
-    private final DataStoreService store;
 
     @PostMapping("/ema")
     public ResponseEntity<String> executeEmaStrategy(@Valid @Nonnull @RequestBody BackTestRequest request) {
@@ -29,17 +23,17 @@ public class BackTesterController {
         final String quoteId = request.quoteId();
         final String exchangeId = request.exchangeId();
         final String strategy = request.strategy();
-        final Long window = request.window();
+        final int period = request.period();
 
         log.info("Publishing event with ids: {}, {}, {} with strategy: {} over {} days",
-                baseId, quoteId, exchangeId, strategy, window);
+                baseId, quoteId, exchangeId, strategy, period);
 
         management.complete(
                 strategy,
                 baseId,
                 quoteId,
                 exchangeId,
-                window
+                period
         );
 
         return ResponseEntity.ok("");

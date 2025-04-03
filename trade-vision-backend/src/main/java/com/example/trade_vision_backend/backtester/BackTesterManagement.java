@@ -19,7 +19,7 @@ public class BackTesterManagement {
             @Nonnull String baseId,
             @Nonnull String quoteId,
             @Nonnull String exchangeId,
-            @Nonnull Long window
+            int period
     ) {
         eventPublisher.publishEvent(new BackTestEvent(
                 UUID.randomUUID(),
@@ -27,7 +27,7 @@ public class BackTesterManagement {
                 baseId,
                 quoteId,
                 exchangeId,
-                window
+                period
         ));
     }
 }

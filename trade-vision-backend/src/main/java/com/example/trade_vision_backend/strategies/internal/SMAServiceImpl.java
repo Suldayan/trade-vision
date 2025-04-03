@@ -21,7 +21,7 @@ public class SMAServiceImpl implements SMAService {
     private final ProcessingDataService processingDataService;
 
     private static final int SCALE = 4;
-    private static final RoundingMode DEFAULT_ROUNDING = RoundingMode.HALF_UP;
+    private static final RoundingMode ROUNDING = RoundingMode.HALF_UP;
 
     @Nonnull
     @Override
@@ -82,7 +82,7 @@ public class SMAServiceImpl implements SMAService {
         return sum.divide(
                 BigDecimal.valueOf(size),
                 SCALE,
-                DEFAULT_ROUNDING
+                ROUNDING
         );
     }
 
