@@ -3,6 +3,7 @@ package com.example.trade_vision_backend.processing.internal.infrastructure.serv
 import com.example.trade_vision_backend.ingestion.ProcessableMarketDTO;
 import com.example.trade_vision_backend.processing.CandleModel;
 import com.example.trade_vision_backend.processing.ProcessedMarketModel;
+import com.example.trade_vision_backend.processing.ProcessingService;
 import com.example.trade_vision_backend.processing.internal.infrastructure.db.CandleRepository;
 import com.example.trade_vision_backend.processing.internal.infrastructure.db.ProcessingRepository;
 import com.example.trade_vision_backend.processing.internal.infrastructure.exception.ProcessingException;

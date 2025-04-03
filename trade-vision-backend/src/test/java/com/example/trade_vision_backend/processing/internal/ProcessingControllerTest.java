@@ -1,11 +1,8 @@
 package com.example.trade_vision_backend.processing.internal;
 
 import com.example.trade_vision_backend.processing.ProcessedMarketDTO;
-import com.example.trade_vision_backend.processing.ProcessedMarketModel;
 import com.example.trade_vision_backend.processing.ProcessingDataService;
 import com.example.trade_vision_backend.processing.internal.infrastructure.controller.ProcessingController;
-import com.example.trade_vision_backend.processing.internal.infrastructure.db.ProcessingRepository;
-import com.example.trade_vision_backend.processing.internal.infrastructure.service.ProcessingService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import org.junit.jupiter.api.BeforeEach;
@@ -25,14 +22,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
-import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
