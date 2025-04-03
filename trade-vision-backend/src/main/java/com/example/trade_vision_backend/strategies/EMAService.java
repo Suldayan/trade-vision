@@ -1,5 +1,7 @@
 package com.example.trade_vision_backend.strategies;
 
+import com.example.trade_vision_backend.processing.CandleDTO;
+
 import java.math.BigDecimal;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -9,13 +11,11 @@ public interface EMAService {
         String baseId,
         String quoteId,
         String exchangeId,
-        Long window
+        int period
     );
 
     List<BigDecimal> calculateEMASeries(
-            String baseId,
-            String quoteId,
-            String exchangeId,
-            Long window
+            List<CandleDTO> candles,
+            int period
     );
 }

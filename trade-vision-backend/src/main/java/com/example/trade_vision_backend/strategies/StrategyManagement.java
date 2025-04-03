@@ -21,14 +21,14 @@ public class StrategyManagement {
         final String baseId = event.baseId();
         final String quoteId = event.quoteId();
         final String exchangeId = event.exchangeId();
-        final Long window = event.window();
+        final int period = event.period();
 
         switch (strategy.toLowerCase()) {
             case EMA -> emaService.calculateEMA(
                     baseId,
                     quoteId,
                     exchangeId,
-                    window
+                    period
             );
         }
     }
