@@ -7,7 +7,7 @@ import java.time.ZonedDateTime;
 import java.util.List;
 
 public interface SMAService {
-    BigDecimal calculateSMA(String baseId, String quoteId, String exchangeId, ZonedDateTime window);
+    BigDecimal calculateSMA(String baseId, String quoteId, String exchangeId, int period);
     BigDecimal calculateAverage(List<CandleDTO> candleDTOS);
     int getNumberOfPeriods(List<CandleDTO> candleDTOS);
 }

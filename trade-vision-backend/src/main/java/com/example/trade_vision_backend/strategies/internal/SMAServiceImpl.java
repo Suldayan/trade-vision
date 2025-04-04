@@ -4,13 +4,13 @@ import com.example.trade_vision_backend.processing.CandleDTO;
 import com.example.trade_vision_backend.processing.ProcessingDataService;
 import com.example.trade_vision_backend.strategies.SMAService;
 import jakarta.annotation.Nonnull;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
 
@@ -29,9 +29,9 @@ public class SMAServiceImpl implements SMAService {
             @Nonnull String baseId,
             @Nonnull String quoteId,
             @Nonnull String exchangeId,
-            @Nonnull ZonedDateTime window
+            @Min(1) int period
     ) {
-        List<CandleDTO> candleDTOS = fetchCandleData(baseId, quoteId, exchangeId, window);
+        List<CandleDTO> candleDTOS = fetchCandleData(baseId, quoteId, exchangeId, period);
         log.info("Fetched {} candle records for calculation", candleDTOS.size());
 
         return calculateAverage(candleDTOS);
@@ -42,18 +42,18 @@ public class SMAServiceImpl implements SMAService {
             @Nonnull String baseId,
             @Nonnull String quoteId,
             @Nonnull String exchangeId,
-            @Nonnull ZonedDateTime window
+            int period
     ) {
         try {
             List<CandleDTO> candleDTOS = processingDataService.fetchAllCandlePairsWithinTimeRange(
                     baseId,
                     quoteId,
                     exchangeId,
-                    window
+                    period
             );
             if (candleDTOS == null || candleDTOS.isEmpty()) {
                 log.warn("No candle data found for parameters: base={}, quote={}, exchange={}, endDate={}",
-                        baseId, quoteId, exchangeId, window);
+                        baseId, quoteId, exchangeId, period);
                 throw new StrategyCalculationException("No candle data available for calculation");
             }
 

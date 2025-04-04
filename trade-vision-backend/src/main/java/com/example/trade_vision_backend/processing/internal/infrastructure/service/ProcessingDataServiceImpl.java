@@ -7,6 +7,7 @@ import com.example.trade_vision_backend.processing.internal.infrastructure.mappe
 import com.example.trade_vision_backend.processing.internal.infrastructure.mapper.ProcessingMapper;
 import jakarta.annotation.Nonnull;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Min;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,8 +28,8 @@ public class ProcessingDataServiceImpl implements ProcessingDataService {
     @Nonnull
     @Override
     public List<ProcessedMarketDTO> fetchAllMarketModelsByTimeRange(
-            @Valid @Nonnull Long startDate,
-            @Valid @Nonnull Long endDate) throws IllegalArgumentException {
+            @Nonnull Long startDate,
+            @Nonnull Long endDate) throws IllegalArgumentException {
 
         processingService.validateTimestamps(startDate, endDate);
         ZonedDateTime zonedStartDate = processingService.convertLongToZonedDateTime(startDate);
@@ -51,7 +52,7 @@ public class ProcessingDataServiceImpl implements ProcessingDataService {
             @Nonnull String baseId,
             @Nonnull String quoteId,
             @Nonnull String exchangeId,
-            int period) {
+            @Min(1) int period) {
         final ZonedDateTime window = convertPeriodToWindow(period);
         List<CandleModel> candleModels = candleRepository.findMarketPairWithinTimeRange(
                 baseId,
