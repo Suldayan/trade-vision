@@ -1,0 +1,3 @@
+strategy_id,name,buy_condition,sell_condition,hold_condition,risk_per_trade
+ma_crossover_v1,"Moving Average Crossover","close > sma_20","close < sma_20","","0.02"
+rsi_bounce_v2,"RSI Bounce","rsi < 30 and volume > sma_volume_50","rsi > 70","rsi between 30-70","0.01"
