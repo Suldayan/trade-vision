@@ -1,10 +1,10 @@
 import numpy as np
-import strategy_executor as StrategyExecutor
+import indicator as Indicator
 
 class Strategy:
     """Base strategy class that all strategies should inherit from."""
     def __init__(self):
-        self.strategy_executor = StrategyExecutor()
+        self.indicator = Indicator()
     
     def generate_signals(self, data):
         """Generate trading signals based on market data.
@@ -21,8 +21,8 @@ class MovingAverageCrossover(Strategy):
     def generate_signals(self, data):
         prices = data['close'].values
         
-        short_ma = self.strategy_executor.sma(prices, self.short_window)
-        long_ma = self.strategy_executor.sma(prices, self.long_window)
+        short_ma = self.indicator.sma(prices, self.short_window)
+        long_ma = self.indicator.sma(prices, self.long_window)
         
         signals = np.zeros(len(prices))
         
@@ -44,7 +44,7 @@ class RSIStrategy(Strategy):
     def generate_signals(self, data):
         prices = data['close'].values
         
-        rsi_values = self.strategy_executor.rsi(prices, self.window)
+        rsi_values = self.indicator.rsi(prices, self.window)
         
         signals = np.zeros(len(prices))
         
@@ -66,7 +66,7 @@ class MACDStrategy(Strategy):
     def generate_signals(self, data):
         prices = data['close'].values
 
-        macd_line, signal_line, histogram = self.strategy_executor.macd(
+        macd_line, signal_line, histogram = self.indicator.macd(
             prices, self.fast, self.slow, self.signal
         )
 
@@ -74,9 +74,11 @@ class MACDStrategy(Strategy):
 
         for i in range(self.slow + self.signal, len(prices)):
             if macd_line[i-1] < signal_line[i-1] and macd_line[i] > signal_line[i]:
-                signals[i] = 1
+                if histogram[i] > histogram[i-1]:  # Confirming increasing momentum
+                    signals[i] = 1
             elif macd_line[i-1] > signal_line[i-1] and macd_line[i] < signal_line[i]:
-                signals[i] = -1
+                if histogram[i] < histogram[i-1]:  # Confirming decreasing momentum
+                    signals[i] = -1
         
         return signals
 
@@ -89,17 +91,17 @@ class BollingerBandStrategy(Strategy):
     def generate_signals(self, data):
         prices = data['close'].values
 
-        upper, middle, lower = self.strategy_executor.bollinger_bands(
+        upper, middle, lower = self.indicator.bollinger_bands(
             prices, self.window, self.num_std
         )
 
         signals = np.zeros(len(prices))
         
         for i in range(self.window, len(prices)):
-            if prices[i-1] < lower[i-1] and prices[i] > lower[i]:
-                signals[i] = 1
-            elif prices[i-1] > upper[i-1] and prices[i] < upper[i]:
-                signals[i] = -1
+            if prices[i] > middle[i] and prices[i-1] < lower[i-1] and prices[i] > lower[i]:
+                signals[i] = 1  
+            elif prices[i] < middle[i] and prices[i-1] > upper[i-1] and prices[i] < upper[i]:
+                signals[i] = -1  
         
         return signals
     
@@ -114,8 +116,8 @@ class CompositeStrategy(Strategy):
     def generate_signals(self, data):
         prices = data['close'].values
 
-        rsi_values = self.strategy_executor.rsi(prices, self.rsi_window)
-        macd_line, signal_line, histogram = self.strategy_executor.macd(
+        rsi_values = self.indicator.rsi(prices, self.rsi_window)
+        macd_line, signal_line, histogram = self.indicator.macd(
             prices, self.macd_fast, self.macd_slow, self.macd_signal
         )
         
