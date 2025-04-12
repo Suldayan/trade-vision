@@ -196,14 +196,16 @@ public final class IndicatorUtils {
         double[] sma = sma(prices, window);
         double[] upper = new double[prices.length];
         double[] lower = new double[prices.length];
+        double[] stdDevs = new double[prices.length];
 
         for (int i = window - 1; i < prices.length; i++) {
             double sumSquaredDiff = 0;
-            for (int j = 0; j < window; j++) {
-                double diff = prices[i - j] - sma[i];
+            for (int j = i - window + 1; j <= i; j++) {
+                double diff = prices[j] - sma[i];
                 sumSquaredDiff += diff * diff;
             }
             double stdDev = Math.sqrt(sumSquaredDiff / window);
+            stdDevs[i] = stdDev;
 
             upper[i] = sma[i] + (numStd * stdDev);
             lower[i] = sma[i] - (numStd * stdDev);
@@ -216,6 +218,7 @@ public final class IndicatorUtils {
         result.put("upper", upper);
         result.put("middle", sma);
         result.put("lower", lower);
+        result.put("stdDev", stdDevs);
 
         return result;
     }
@@ -262,6 +265,384 @@ public final class IndicatorUtils {
         Map<String, double[]> result = new HashMap<>();
         result.put("%K", percentK);
         result.put("%D", percentD);
+
+        return result;
+    }
+
+    public static Map<String, double[]> ichimokuCloud(double[] high, double[] low, double[] close) {
+        return ichimokuCloud(high, low, close, 9, 26, 52);
+    }
+
+    public static Map<String, double[]> ichimokuCloud(double[] high, double[] low, double[] close,
+                                                      int tenkanPeriod, int kijunPeriod, int chikouPeriod) {
+        int max = Math.max(Math.max(tenkanPeriod, kijunPeriod), chikouPeriod);
+        validateInputs(high, max);
+        validateInputs(low, max);
+        validateInputs(close, max);
+
+        if (high.length != low.length || high.length != close.length) {
+            throw new IllegalArgumentException("High, low, and close arrays must be of the same length");
+        }
+
+        int length = high.length;
+        double[] tenkanSen = new double[length];
+        double[] kijunSen = new double[length];
+        double[] senkouSpanA = new double[length];
+        double[] senkouSpanB = new double[length];
+        double[] chikouSpan = new double[length];
+
+        for (int i = tenkanPeriod - 1; i < length; i++) {
+            double highestHigh = Double.NEGATIVE_INFINITY;
+            double lowestLow = Double.POSITIVE_INFINITY;
+
+            for (int j = 0; j < tenkanPeriod; j++) {
+                highestHigh = Math.max(highestHigh, high[i - j]);
+                lowestLow = Math.min(lowestLow, low[i - j]);
+            }
+
+            tenkanSen[i] = (highestHigh + lowestLow) / 2;
+        }
+
+        for (int i = kijunPeriod - 1; i < length; i++) {
+            double highestHigh = Double.NEGATIVE_INFINITY;
+            double lowestLow = Double.POSITIVE_INFINITY;
+
+            for (int j = 0; j < kijunPeriod; j++) {
+                highestHigh = Math.max(highestHigh, high[i - j]);
+                lowestLow = Math.min(lowestLow, low[i - j]);
+            }
+
+            kijunSen[i] = (highestHigh + lowestLow) / 2;
+        }
+
+        for (int i = 0; i < length - kijunPeriod; i++) {
+            int index = i + kijunPeriod - 1;
+            if (index >= kijunPeriod - 1 && index >= tenkanPeriod - 1) {
+                senkouSpanA[i + kijunPeriod] = (tenkanSen[index] + kijunSen[index]) / 2;
+            }
+        }
+
+        for (int i = chikouPeriod - 1; i < length - kijunPeriod; i++) {
+            double highestHigh = Double.NEGATIVE_INFINITY;
+            double lowestLow = Double.POSITIVE_INFINITY;
+
+            for (int j = 0; j < chikouPeriod; j++) {
+                highestHigh = Math.max(highestHigh, high[i - j]);
+                lowestLow = Math.min(lowestLow, low[i - j]);
+            }
+
+            senkouSpanB[i + kijunPeriod] = (highestHigh + lowestLow) / 2;
+        }
+
+        if (length - kijunPeriod >= 0)
+            System.arraycopy(close, kijunPeriod, chikouSpan, 0, length - kijunPeriod);
+
+        Arrays.fill(tenkanSen, 0, tenkanPeriod - 1, Double.NaN);
+        Arrays.fill(kijunSen, 0, kijunPeriod - 1, Double.NaN);
+        Arrays.fill(senkouSpanA, 0, 2 * kijunPeriod - 1, Double.NaN);
+        Arrays.fill(senkouSpanB, 0, kijunPeriod + chikouPeriod - 1, Double.NaN);
+        Arrays.fill(chikouSpan, length - kijunPeriod, length, Double.NaN);
+
+        Map<String, double[]> result = new HashMap<>();
+        result.put("tenkanSen", tenkanSen);
+        result.put("kijunSen", kijunSen);
+        result.put("senkouSpanA", senkouSpanA);
+        result.put("senkouSpanB", senkouSpanB);
+        result.put("chikouSpan", chikouSpan);
+
+        return result;
+    }
+
+    public static double[] obv(double[] close, double[] volume) {
+        validateInputs(close, 1);
+        validateInputs(volume, 1);
+
+        if (close.length != volume.length) {
+            throw new IllegalArgumentException("Close price and volume arrays must be of the same length");
+        }
+
+        double[] obv = new double[close.length];
+        obv[0] = volume[0];
+
+        for (int i = 1; i < close.length; i++) {
+            if (close[i] > close[i - 1]) {
+                obv[i] = obv[i - 1] + volume[i];
+            } else if (close[i] < close[i - 1]) {
+                obv[i] = obv[i - 1] - volume[i];
+            } else {
+                obv[i] = obv[i - 1];
+            }
+        }
+
+        return obv;
+    }
+
+    public static Map<String, double[]> pivotPoints(double[] high, double[] low, double[] close, double[] open, PivotType type) {
+        validateInputs(high, 1);
+        validateInputs(low, 1);
+        validateInputs(close, 1);
+        validateInputs(open, 1);
+
+        if (high.length != low.length || high.length != close.length || high.length != open.length) {
+            throw new IllegalArgumentException("High, low, close, and open arrays must be of the same length");
+        }
+
+        int length = high.length;
+
+        double[] pp = new double[length];
+        double[] r1 = new double[length];
+        double[] r2 = new double[length];
+        double[] r3 = new double[length];
+        double[] s1 = new double[length];
+        double[] s2 = new double[length];
+        double[] s3 = new double[length];
+
+        Arrays.fill(pp, 0, 1, Double.NaN);
+        Arrays.fill(r1, 0, 1, Double.NaN);
+        Arrays.fill(r2, 0, 1, Double.NaN);
+        Arrays.fill(r3, 0, 1, Double.NaN);
+        Arrays.fill(s1, 0, 1, Double.NaN);
+        Arrays.fill(s2, 0, 1, Double.NaN);
+        Arrays.fill(s3, 0, 1, Double.NaN);
+
+        for (int i = 1; i < length; i++) {
+            double prevHigh = high[i - 1];
+            double prevLow = low[i - 1];
+            double prevClose = close[i - 1];
+            double prevOpen = open[i - 1];
+            double range = prevHigh - prevLow;
+
+            switch (type) {
+                case STANDARD:
+                    pp[i] = (prevHigh + prevLow + prevClose) / 3;
+                    r1[i] = 2 * pp[i] - prevLow;
+                    s1[i] = 2 * pp[i] - prevHigh;
+                    r2[i] = pp[i] + range;
+                    s2[i] = pp[i] - range;
+                    r3[i] = prevHigh + 2 * (pp[i] - prevLow);
+                    s3[i] = prevLow - 2 * (prevHigh - pp[i]);
+                    break;
+
+                case FIBONACCI:
+                    pp[i] = (prevHigh + prevLow + prevClose) / 3;
+                    r1[i] = pp[i] + 0.382 * range;
+                    s1[i] = pp[i] - 0.382 * range;
+                    r2[i] = pp[i] + 0.618 * range;
+                    s2[i] = pp[i] - 0.618 * range;
+                    r3[i] = pp[i] + range;
+                    s3[i] = pp[i] - range;
+                    break;
+
+                case CAMARILLA:
+                    pp[i] = (prevHigh + prevLow + prevClose) / 3;
+                    double factor = 1.1 * range;
+                    r1[i] = prevClose + factor / 12;
+                    s1[i] = prevClose - factor / 12;
+                    r2[i] = prevClose + factor / 6;
+                    s2[i] = prevClose - factor / 6;
+                    r3[i] = prevClose + factor / 4;
+                    s3[i] = prevClose - factor / 4;
+                    break;
+
+                case WOODIE:
+                    pp[i] = (prevHigh + prevLow + 2 * prevClose) / 4;
+                    r1[i] = 2 * pp[i] - prevLow;
+                    s1[i] = 2 * pp[i] - prevHigh;
+                    r2[i] = pp[i] + range;
+                    s2[i] = pp[i] - range;
+                    r3[i] = prevHigh + 2 * (pp[i] - prevLow);
+                    s3[i] = prevLow - 2 * (prevHigh - pp[i]);
+                    break;
+
+                case DEMARK:
+                    double x;
+                    if (prevClose < prevOpen) {
+                        x = prevHigh + 2 * prevLow + prevClose;
+                    } else if (prevClose > prevOpen) {
+                        x = 2 * prevHigh + prevLow + prevClose;
+                    } else {
+                        x = prevHigh + prevLow + 2 * prevClose;
+                    }
+                    pp[i] = x / 4;
+                    r1[i] = x / 2 - prevLow;
+                    s1[i] = x / 2 - prevHigh;
+                    r2[i] = pp[i] + (r1[i] - pp[i]);
+                    s2[i] = pp[i] - (pp[i] - s1[i]);
+                    r3[i] = r1[i] + (r1[i] - pp[i]);
+                    s3[i] = s1[i] - (pp[i] - s1[i]);
+                    break;
+
+                default:
+                    throw new IllegalArgumentException("Unsupported pivot point type: " + type);
+            }
+        }
+
+        Map<String, double[]> result = new HashMap<>();
+        result.put("PP", pp);
+        result.put("R1", r1);
+        result.put("R2", r2);
+        result.put("R3", r3);
+        result.put("S1", s1);
+        result.put("S2", s2);
+        result.put("S3", s3);
+
+        return result;
+    }
+
+    public static Map<String, double[]> fibonacciRetracement(double[] high, double[] low, boolean isUptrend, int period) {
+        validateInputs(high, period);
+        validateInputs(low, period);
+
+        if (high.length != low.length) {
+            throw new IllegalArgumentException("High and low arrays must be of the same length");
+        }
+
+        int length = high.length;
+
+        double[] levels = {0.0, 0.236, 0.382, 0.5, 0.618, 0.786, 1.0};
+        Map<String, double[]> result = new HashMap<>();
+
+        for (double level : levels) {
+            result.put("level_" + level, new double[length]);
+        }
+
+        for (double level : levels) {
+            Arrays.fill(result.get("level_" + level), 0, period, Double.NaN);
+        }
+
+        for (int i = period; i < length; i++) {
+            double highestHigh = Double.NEGATIVE_INFINITY;
+            double lowestLow = Double.POSITIVE_INFINITY;
+
+            for (int j = i - period + 1; j <= i; j++) {
+                highestHigh = Math.max(highestHigh, high[j]);
+                lowestLow = Math.min(lowestLow, low[j]);
+            }
+
+            double range = highestHigh - lowestLow;
+
+            for (double level : levels) {
+                if (isUptrend) {
+                    result.get("level_" + level)[i] = highestHigh - (range * level);
+                } else {
+                    result.get("level_" + level)[i] = lowestLow + (range * level);
+                }
+            }
+        }
+
+        return result;
+    }
+
+    public static Map<String, double[]> dmi(double[] high, double[] low, double[] close, int period) {
+        validateInputs(high, period);
+        validateInputs(low, period);
+        validateInputs(close, period);
+
+        if (high.length != low.length || high.length != close.length) {
+            throw new IllegalArgumentException("High, low, and close arrays must be of the same length");
+        }
+
+        int length = high.length;
+
+        double[] tr = new double[length];
+        tr[0] = high[0] - low[0];
+
+        double[] plusDM = new double[length];
+        double[] minusDM = new double[length];
+
+        for (int i = 1; i < length; i++) {
+            double range1 = high[i] - low[i];
+            double range2 = Math.abs(high[i] - close[i - 1]);
+            double range3 = Math.abs(low[i] - close[i - 1]);
+            tr[i] = Math.max(range1, Math.max(range2, range3));
+
+            double upMove = high[i] - high[i - 1];
+            double downMove = low[i - 1] - low[i];
+
+            // +DM
+            if (upMove > downMove && upMove > 0) {
+                plusDM[i] = upMove;
+            } else {
+                plusDM[i] = 0;
+            }
+
+            // -DM
+            if (downMove > upMove && downMove > 0) {
+                minusDM[i] = downMove;
+            } else {
+                minusDM[i] = 0;
+            }
+        }
+
+        double[] smoothedTR = new double[length];
+        double[] smoothedPlusDM = new double[length];
+        double[] smoothedMinusDM = new double[length];
+
+        for (int i = 0; i < period; i++) {
+            if (i == 0) {
+                smoothedTR[i] = tr[i];
+                smoothedPlusDM[i] = plusDM[i];
+                smoothedMinusDM[i] = minusDM[i];
+            } else {
+                smoothedTR[i] = smoothedTR[i - 1] - (smoothedTR[i - 1] / period) + tr[i];
+                smoothedPlusDM[i] = smoothedPlusDM[i - 1] - (smoothedPlusDM[i - 1] / period) + plusDM[i];
+                smoothedMinusDM[i] = smoothedMinusDM[i - 1] - (smoothedMinusDM[i - 1] / period) + minusDM[i];
+            }
+        }
+
+        for (int i = period; i < length; i++) {
+            smoothedTR[i] = smoothedTR[i - 1] - (smoothedTR[i - 1] / period) + tr[i];
+            smoothedPlusDM[i] = smoothedPlusDM[i - 1] - (smoothedPlusDM[i - 1] / period) + plusDM[i];
+            smoothedMinusDM[i] = smoothedMinusDM[i - 1] - (smoothedMinusDM[i - 1] / period) + minusDM[i];
+        }
+
+        double[] plusDI = new double[length];
+        double[] minusDI = new double[length];
+
+        for (int i = 0; i < length; i++) {
+            if (smoothedTR[i] > 0) {
+                plusDI[i] = 100 * (smoothedPlusDM[i] / smoothedTR[i]);
+                minusDI[i] = 100 * (smoothedMinusDM[i] / smoothedTR[i]);
+            } else {
+                plusDI[i] = 0;
+                minusDI[i] = 0;
+            }
+        }
+
+        double[] dx = new double[length];
+        for (int i = 0; i < length; i++) {
+            double sum = plusDI[i] + minusDI[i];
+            if (sum > 0) {
+                dx[i] = 100 * (Math.abs(plusDI[i] - minusDI[i]) / sum);
+            } else {
+                dx[i] = 0;
+            }
+        }
+
+        double[] adx = new double[length];
+        Arrays.fill(adx, 0, period - 1, Double.NaN);
+
+        if (length >= 2 * period - 1) {
+            double sum = 0;
+            for (int i = period - 1; i < 2 * period - 1; i++) {
+                sum += dx[i];
+            }
+            adx[2 * period - 2] = sum / period;
+
+            for (int i = 2 * period - 1; i < length; i++) {
+                adx[i] = ((adx[i - 1] * (period - 1)) + dx[i]) / period;
+            }
+        }
+
+        Arrays.fill(plusDI, 0, period - 1, Double.NaN);
+        Arrays.fill(minusDI, 0, period - 1, Double.NaN);
+        Arrays.fill(dx, 0, period - 1, Double.NaN);
+
+        Map<String, double[]> result = new HashMap<>();
+        result.put("plusDI", plusDI);
+        result.put("minusDI", minusDI);
+        result.put("ADX", adx);
+        result.put("DX", dx);
 
         return result;
     }
