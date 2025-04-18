@@ -1,6 +1,10 @@
 package com.example.trade_vision_backend.backtester.internal;
 
-import com.example.trade_vision_backend.backtester.BackTesterManagement;
+import com.example.trade_vision_backend.backtester.BackTesterService;
+import com.example.trade_vision_backend.data.CsvImporterService;
+import com.example.trade_vision_backend.data.MarketData;
+import com.example.trade_vision_backend.strategies.StrategyService;
+import com.example.trade_vision_backend.strategies.internal.Strategy;
 import jakarta.annotation.Nonnull;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -9,33 +13,27 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
+import java.io.InputStream;
+
 @RestController
 @Slf4j
-@RequestMapping("/api/v1/test")
+@RequestMapping("/api/v1/strategy")
 @Validated
 @RequiredArgsConstructor
 public class BackTesterController {
-    private final BackTesterManagement management;
+    private final CsvImporterService csvImporterService;
+    private final StrategyService strategyService;
+    private final BackTesterService backTesterService;
 
-    @PostMapping("/ema")
-    public ResponseEntity<String> executeEmaStrategy(@Valid @Nonnull @RequestBody BackTestRequest request) {
-        final String baseId = request.baseId();
-        final String quoteId = request.quoteId();
-        final String exchangeId = request.exchangeId();
-        final String strategy = request.strategy();
-        final int period = request.period();
+    @PostMapping("/create")
+    public ResponseEntity<BackTestResult> executeUserStrategy(
+            @Valid @Nonnull InputStream stream,
+            @Valid @RequestBody @Nonnull BackTestRequest request) throws IOException {
+        MarketData marketData = csvImporterService.importCsvFromStream(stream);
+        Strategy strategy = strategyService.buildStrategyFromRequest(request);
+        BackTestResult result = backTesterService.runBackTest(strategy, marketData, request);
 
-        log.info("Publishing event with ids: {}, {}, {} with strategy: {} over {} days",
-                baseId, quoteId, exchangeId, strategy, period);
-
-        management.complete(
-                strategy,
-                baseId,
-                quoteId,
-                exchangeId,
-                period
-        );
-
-        return ResponseEntity.ok("");
+        return ResponseEntity.ok(result);
     }
 }

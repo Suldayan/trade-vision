@@ -1,14 +1,31 @@
 package com.example.trade_vision_backend.backtester.internal;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.annotation.Nonnull;
-import jakarta.validation.constraints.Min;
 
-public record BackTestRequest(
-        @Nonnull @JsonProperty String strategy,
-        @Nonnull @JsonProperty String baseId,
-        @Nonnull @JsonProperty String quoteId,
-        @Nonnull @JsonProperty String exchangeId,
-        @Min(1) @JsonProperty int period
-) {
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.util.List;
+
+@Getter
+@Setter
+@Builder
+public class BackTestRequest {
+    // Data source information
+    private String dataFilePath;
+
+    // Initial capital and position sizing
+    private double initialCapital;
+    private double riskPerTrade;
+
+    // Strategy configuration
+    private List<ConditionConfig> entryConditions;
+    private List<ConditionConfig> exitConditions;
+    private boolean requireAllEntryConditions; // AND logic
+    private boolean requireAllExitConditions; // OR logic
+
+    // Trading parameters
+    private boolean allowShort;
+    private double commissionRate;
+    private double slippagePercent;
 }

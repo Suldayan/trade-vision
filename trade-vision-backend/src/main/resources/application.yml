@@ -38,3 +38,7 @@ logging:
   level:
     root: INFO
 
+coincap:
+  api:
+    key: ${API_KEY}
+
