@@ -1,0 +1,23 @@
+spring:
+  profile: test
+
+  datasource:
+    url: jdbc:h2:mem:testdb;MODE=PostgreSQL
+    username: sa
+    password:
+    driver-class-name: org.h2.Driver
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+    database-platform: org.hibernate.dialect.H2Dialect
+
+  modulith:
+    events:
+      completion:
+        mode: delete
+      jdbc-schema-initialization:
+        enabled: true
+
+  flyway:
+    enabled: false
