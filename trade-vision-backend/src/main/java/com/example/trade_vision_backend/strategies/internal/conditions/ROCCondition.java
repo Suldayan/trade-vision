@@ -8,7 +8,6 @@ import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
 public class ROCCondition implements Condition {
-
     private final int period;       // Period for ROC calculation
     private final double threshold; // Value to compare ROC against
     private final Direction direction; // Direction for comparison
