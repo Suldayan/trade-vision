@@ -1,4 +1,4 @@
-package com.example.trade_vision_backend.config;
+package com.example.trade_vision_backend.backtester.internal.config;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Bean;

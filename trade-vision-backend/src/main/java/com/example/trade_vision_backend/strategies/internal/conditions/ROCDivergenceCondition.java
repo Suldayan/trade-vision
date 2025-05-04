@@ -69,7 +69,7 @@ public class ROCDivergenceCondition implements Condition {
 
         } else {
             // Bearish divergence: Higher price highs but lower ROC highs
-            // Find highest price in divergence period
+            // Find the highest price in divergence period
             double highestPrice = Double.MIN_VALUE;
             int highestPriceIdx = -1;
             double previousHighestPrice = Double.MIN_VALUE;
@@ -133,16 +133,10 @@ public class ROCDivergenceCondition implements Condition {
         return rocValues;
     }
 
-    /**
-     * Factory method for creating a bullish divergence condition
-     */
     public static ROCDivergenceCondition bullish(int period, int divergencePeriod) {
         return new ROCDivergenceCondition(period, divergencePeriod, true);
     }
 
-    /**
-     * Factory method for creating a bearish divergence condition
-     */
     public static ROCDivergenceCondition bearish(int period, int divergencePeriod) {
         return new ROCDivergenceCondition(period, divergencePeriod, false);
     }
