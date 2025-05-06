@@ -6,6 +6,8 @@ import com.example.trade_vision_backend.domain.ConditionConfig;
 import com.example.trade_vision_backend.strategies.Strategy;
 import com.example.trade_vision_backend.strategies.StrategyService;
 import com.example.trade_vision_backend.strategies.internal.conditions.*;
+import com.example.trade_vision_backend.strategies.internal.enums.DMISignalType;
+import com.example.trade_vision_backend.strategies.internal.enums.IchimokuSignalType;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -84,6 +86,8 @@ public class StrategyServiceImpl implements StrategyService {
                 case "OBV" -> createObv(config);
                 case "OBV_CROSSOVER" -> createObvCrossover(config);
                 case "OBV_POSITION" -> createObvPosition(config);
+                case "ICHIMOKU_CLOUD" -> createIchimokuCloud(config);
+                case "DMI" -> createDmi(config);
                 case "AND" -> createAndComposite(config);
                 case "OR" -> createOrComposite(config);
                 case "NOT" -> createNotComposite(config);
@@ -245,6 +249,32 @@ public class StrategyServiceImpl implements StrategyService {
     }
 
     @Nonnull
+    private IchimokuCloudCondition createIchimokuCloud(@Nonnull ConditionConfig config) {
+        int tenkanPeriod = getIntParam(config, "tenkanPeriod", 9);
+        int kijunPeriod = getIntParam(config, "kijunPeriod", 26);
+        int chikouPeriod = getIntParam(config, "chikouPeriod", 52);
+        IchimokuSignalType signalType = getEnumParam(config, "signalType", IchimokuSignalType.class);
+
+        log.debug("Creating Ichimoku Cloud condition with tenkanPeriod={}, kijunPeriod={}, chikouPeriod={}, signalType={}",
+                tenkanPeriod, kijunPeriod, chikouPeriod, signalType);
+
+        return new IchimokuCloudCondition(tenkanPeriod, kijunPeriod, chikouPeriod, signalType);
+    }
+
+    @Nonnull
+    private DMICondition createDmi(@Nonnull ConditionConfig config) {
+        int period = getIntParam(config, "period", 14);
+        DMISignalType signalType = getEnumParam(config, "divergenceType", DMISignalType.class);
+        double threshold = getDoubleParam(config, "threshold", 25.0);
+        double divergenceThreshold = getDoubleParam(config, "divergenceThreshold", 10.0);
+
+        log.debug("Creating DMI condition with period={}, signalType={}, threshold={}, divergenceThreshold={}",
+                period, signalType, threshold, divergenceThreshold);
+
+        return new DMICondition(period, signalType, threshold, divergenceThreshold);
+    }
+
+    @Nonnull
     private CompositeCondition createAndComposite(@Nonnull ConditionConfig config) {
         log.debug("Creating AND composite condition");
         CompositeCondition composite = new CompositeCondition(CompositeCondition.LogicalOperator.AND);
@@ -359,6 +389,38 @@ public class StrategyServiceImpl implements StrategyService {
         };
     }
 
+    /**
+     * Get integer parameter with a default value if not present
+     */
+    private int getIntParam(
+            @Nonnull ConditionConfig config,
+            @Nonnull String paramName,
+            int defaultValue) {
+        log.trace("Getting integer parameter with default: {} from condition type: {}", paramName, config.getType());
+        Object value = config.getParameters().get(paramName);
+        if (value == null) {
+            log.debug("Using default int value {} for parameter: {}", defaultValue, paramName);
+            return defaultValue;
+        }
+
+        return switch (value) {
+            case Integer i -> i;
+            case Number number -> number.intValue();
+            case String s -> {
+                try {
+                    yield Integer.parseInt(s);
+                } catch (NumberFormatException e) {
+                    log.error("Failed to parse {} as integer for parameter: {}", s, paramName, e);
+                    throw new IllegalArgumentException("Parameter '" + paramName + "' is not a valid integer: " + s, e);
+                }
+            }
+            default -> {
+                log.error("Parameter '{}' is not a valid integer: {}", paramName, value);
+                throw new IllegalArgumentException("Parameter '" + paramName + "' is not a valid integer: " + value);
+            }
+        };
+    }
+
     private double getDoubleParam(
             @Nonnull ConditionConfig config,
             @Nonnull String paramName) {
@@ -386,17 +448,36 @@ public class StrategyServiceImpl implements StrategyService {
         };
     }
 
+    /**
+     * Get double parameter with a default value if not present
+     */
     private double getDoubleParam(
             @Nonnull ConditionConfig config,
             @Nonnull String paramName,
             double defaultValue) {
-        log.trace("Getting double parameter: {} with default: {} from condition type: {}",
-                paramName, defaultValue, config.getType());
-        if (!config.getParameters().containsKey(paramName)) {
-            log.debug("Using default value: {} for parameter: {}", defaultValue, paramName);
+        log.trace("Getting double parameter with default: {} from condition type: {}", paramName, config.getType());
+        Object value = config.getParameters().get(paramName);
+        if (value == null) {
+            log.debug("Using default double value {} for parameter: {}", defaultValue, paramName);
             return defaultValue;
         }
-        return getDoubleParam(config, paramName);
+
+        return switch (value) {
+            case Double v -> v;
+            case Number number -> number.doubleValue();
+            case String s -> {
+                try {
+                    yield Double.parseDouble(s);
+                } catch (NumberFormatException e) {
+                    log.error("Failed to parse {} as double for parameter: {}", s, paramName, e);
+                    throw new IllegalArgumentException("Parameter '" + paramName + "' is not a valid double: " + s, e);
+                }
+            }
+            default -> {
+                log.error("Parameter '{}' is not a valid double: {}", paramName, value);
+                throw new IllegalArgumentException("Parameter '" + paramName + "' is not a valid double: " + value);
+            }
+        };
     }
 
     private boolean getBooleanParam(
@@ -417,4 +498,36 @@ public class StrategyServiceImpl implements StrategyService {
             }
         };
     }
+
+    private <T extends Enum<T>> T getEnumParam(
+            @Nonnull ConditionConfig config,
+            @Nonnull String paramName,
+            @Nonnull Class<T> enumClass) {
+        log.trace("Getting enum parameter: {} from condition type: {}", paramName, config.getType());
+        Object value = config.getParameters().get(paramName);
+        if (value == null) {
+            log.error("Missing required enum parameter: {} for condition type: {}", paramName, config.getType());
+            throw new IllegalArgumentException("Missing required parameter: " + paramName);
+        }
+
+        if (value instanceof String enumName) {
+            try {
+                return Enum.valueOf(enumClass, enumName);
+            } catch (IllegalArgumentException e) {
+                log.error("Invalid enum value: {} for enum class: {}", enumName, enumClass.getSimpleName(), e);
+                throw new IllegalArgumentException("Parameter '" + paramName +
+                        "' is not a valid value for enum type " + enumClass.getSimpleName() + ": " + enumName, e);
+            }
+        } else if (enumClass.isInstance(value)) {
+            @SuppressWarnings("unchecked")
+            T enumValue = (T) value;
+            return enumValue;
+        } else {
+            log.error("Parameter '{}' is not a valid enum value for type {}: {}",
+                    paramName, enumClass.getSimpleName(), value);
+            throw new IllegalArgumentException("Parameter '" + paramName +
+                    "' is not a valid value for enum type " + enumClass.getSimpleName() + ": " + value);
+        }
+    }
+
 }
