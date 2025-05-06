@@ -71,6 +71,7 @@ export const DEFAULT_PARAMETERS: Record<string, Record<string, any>> = {
     basePeriod: 26,
     spanPeriod: 52,
     displacement: 26,
+    cloudComponent: 'price_above_cloud',
     isBullish: true
   },
   PIVOT_POINTS: {
@@ -87,7 +88,7 @@ export const DEFAULT_PARAMETERS: Record<string, Record<string, any>> = {
     adxPeriod: 14,
     diPeriod: 14,
     adxThreshold: 25,
-    isPlusDiAbove: true
+    dmiComponent: 'di_plus_above'
   },
   AND: {
     conditions: []
@@ -100,7 +101,6 @@ export const DEFAULT_PARAMETERS: Record<string, Record<string, any>> = {
   }
 };
 
-// Create a new condition with default parameters
 export const createCondition = (type: string): ConditionConfig => {
   const params = { ...DEFAULT_PARAMETERS[type] };
   
@@ -115,7 +115,6 @@ export const createCondition = (type: string): ConditionConfig => {
   };
 };
 
-// Helper function to check required parameters
 const checkRequiredParams = (condition: ConditionConfig, requiredParams: string[]): void => {
   for (const param of requiredParams) {
     if (condition.parameters[param] === undefined || condition.parameters[param] === null) {
@@ -168,17 +167,29 @@ export const validateCondition = (condition: ConditionConfig): void => {
       checkRequiredParams(condition, ['lookbackPeriod', 'level', 'isBullish', 'tolerance']);
       break;
       
+    case 'PIVOT_POINTS':
+      checkRequiredParams(condition, ['type', 'level', 'tolerance']);
+      break;
+      
+    case 'ICHIMOKU_CLOUD':
+      checkRequiredParams(condition, ['conversionPeriod', 'basePeriod', 'spanPeriod', 'displacement', 'cloudComponent']);
+      break;
+
+    case 'DMI':
+      checkRequiredParams(condition, ['adxPeriod', 'diPeriod', 'adxThreshold', 'dmiComponent']);
+      break;
+      
+    case 'ROC_DIVERGENCE':
+      checkRequiredParams(condition, ['period', 'lookbackPeriods', 'divergenceType']);
+      break;
+      
     default:
       throw new Error(`Unknown condition type: ${condition.type}`);
   }
 };
 
-// Validate the entire strategy
 export const validateStrategy = (strategy: BackTestRequest): void => {
-  // Validate all entry conditions
   strategy.entryConditions.forEach(validateCondition);
-  
-  // Validate all exit conditions
   strategy.exitConditions.forEach(validateCondition);
 };
 

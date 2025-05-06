@@ -7,6 +7,7 @@ import {
   getParamStepValue, 
   getParamMaxValue 
 } from '../utils/parameter-utils';
+import { getParamOptions } from '../../constants/condition-constants';
 
 interface ParameterFieldProps {
   conditionType: string;
@@ -17,12 +18,12 @@ interface ParameterFieldProps {
 }
 
 const ParameterField: React.FC<ParameterFieldProps> = ({
+  conditionType,
   paramName,
   paramValue,
   onChange,
   paramIndex
 }) => {
-  // Handle boolean parameters
   if (typeof paramValue === 'boolean') {
     return (
       <motion.div 
@@ -55,8 +56,7 @@ const ParameterField: React.FC<ParameterFieldProps> = ({
       </motion.div>
     );
   }
-  
-  // Handle number parameters
+
   if (typeof paramValue === 'number') {
     const min = getParamMinValue(paramName);
     const step = getParamStepValue(paramName);
@@ -95,7 +95,6 @@ const ParameterField: React.FC<ParameterFieldProps> = ({
     );
   }
 
-  // Handle string option parameters
   if (typeof paramValue === 'string') {
     // Get options based on parameter name and condition type
     const options = getParamOptions(conditionType, paramName);
