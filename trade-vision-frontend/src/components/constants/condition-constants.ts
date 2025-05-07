@@ -5,7 +5,6 @@ export const CONDITION_TYPES = [
   'BOLLINGER_BANDS',  
   'STOCHASTIC',
   'FIBONACCI_RETRACEMENT',
-//TODO: implement these ones in both backend and frontend
   'ROC',
   'ROC_DIVERGENCE',
   'ROC_CROSSOVER',
@@ -14,13 +13,11 @@ export const CONDITION_TYPES = [
   'ICHIMOKU_CLOUD',
   'PIVOT_POINTS',
   'DMI',
-
   'AND',
   'OR',
   'NOT'
 ];
 
-// Get gradient color based on condition type
 export const getConditionColor = (type: string): string => {
   switch(type) {
     case 'AND': return 'from-blue-600 to-indigo-800';

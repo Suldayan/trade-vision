@@ -167,20 +167,36 @@ export const validateCondition = (condition: ConditionConfig): void => {
       checkRequiredParams(condition, ['lookbackPeriod', 'level', 'isBullish', 'tolerance']);
       break;
       
-    case 'PIVOT_POINTS':
-      checkRequiredParams(condition, ['type', 'level', 'tolerance']);
+    case 'ROC':
+      checkRequiredParams(condition, ['period', 'threshold']);
+      break;
+      
+    case 'ROC_DIVERGENCE':
+      checkRequiredParams(condition, ['period', 'lookbackPeriods', 'divergenceType']);
+      break;
+      
+    case 'ROC_CROSSOVER':
+      checkRequiredParams(condition, ['fastPeriod', 'slowPeriod', 'crossAbove']);
+      break;
+      
+    case 'ATR':
+      checkRequiredParams(condition, ['period', 'multiplier', 'isAbove', 'compareWithPrice']);
+      break;
+      
+    case 'OBV':
+      checkRequiredParams(condition, ['lookbackPeriod', 'threshold', 'isIncreasing']);
       break;
       
     case 'ICHIMOKU_CLOUD':
       checkRequiredParams(condition, ['conversionPeriod', 'basePeriod', 'spanPeriod', 'displacement', 'cloudComponent']);
       break;
-
-    case 'DMI':
-      checkRequiredParams(condition, ['adxPeriod', 'diPeriod', 'adxThreshold', 'dmiComponent']);
+      
+    case 'PIVOT_POINTS':
+      checkRequiredParams(condition, ['type', 'level', 'tolerance']);
       break;
       
-    case 'ROC_DIVERGENCE':
-      checkRequiredParams(condition, ['period', 'lookbackPeriods', 'divergenceType']);
+    case 'DMI':
+      checkRequiredParams(condition, ['adxPeriod', 'diPeriod', 'adxThreshold', 'dmiComponent']);
       break;
       
     default:
