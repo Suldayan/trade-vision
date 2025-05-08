@@ -1,12 +1,14 @@
 package com.example.trade_vision_backend.strategies.internal;
 
 import com.example.trade_vision_backend.domain.BackTestRequest;
+import com.example.trade_vision_backend.indicators.PivotType;
 import com.example.trade_vision_backend.strategies.Condition;
 import com.example.trade_vision_backend.domain.ConditionConfig;
 import com.example.trade_vision_backend.strategies.Strategy;
 import com.example.trade_vision_backend.strategies.StrategyService;
 import com.example.trade_vision_backend.strategies.internal.conditions.*;
 import com.example.trade_vision_backend.strategies.internal.enums.DMISignalType;
+import com.example.trade_vision_backend.strategies.internal.enums.Direction;
 import com.example.trade_vision_backend.strategies.internal.enums.IchimokuSignalType;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
@@ -80,13 +82,15 @@ public class StrategyServiceImpl implements StrategyService {
                 case "BOLLINGER_BANDS" -> createBollingerBands(config);
                 case "STOCHASTIC" -> createStochastic(config);
                 case "FIBONACCI_RETRACEMENT" -> createFibonacciRetracement(config);
-                case "RATE_OF_CHANGE" -> createRateOfChange(config);
-                case "RATE_OF_CHANGE_CROSSOVER" -> createRateOfChangeCrossover(config);
-                case "RATE_OF_CHANGE_DIVERGENCE" -> createRateOfChangeDivergence(config);
+                case "ROC" -> createRateOfChange(config);
+                case "ROC_CROSSOVER" -> createRateOfChangeCrossover(config);
+                case "ROC_DIVERGENCE" -> createRateOfChangeDivergence(config);
                 case "OBV" -> createObv(config);
                 case "OBV_CROSSOVER" -> createObvCrossover(config);
                 case "OBV_POSITION" -> createObvPosition(config);
                 case "ICHIMOKU_CLOUD" -> createIchimokuCloud(config);
+                //case "PIVOT_POINTS" -> createPivotPoints(config);
+                case "ATR" -> createAtr(config);
                 case "DMI" -> createDmi(config);
                 case "AND" -> createAndComposite(config);
                 case "OR" -> createOrComposite(config);
@@ -183,12 +187,12 @@ public class StrategyServiceImpl implements StrategyService {
     private ROCCondition createRateOfChange(@Nonnull ConditionConfig config) {
         int period = getIntParam(config, "period");
         double threshold = getDoubleParam(config, "threshold");
-        boolean isAbove = getBooleanParam(config, "isAbove");
+        Direction direction = getEnumParam(config, "direction", Direction.class);
 
-        log.debug("Creating Rate of Change condition with period={}, threshold={}, isAbove={}",
-                period, threshold, isAbove);
+        log.debug("Creating Rate of Change condition with period={}, threshold={}, direction={}",
+                period, threshold, direction);
 
-        return new ROCCondition(period, threshold, isAbove);
+        return new ROCCondition(period, threshold, direction);
     }
 
     @Nonnull
@@ -264,7 +268,7 @@ public class StrategyServiceImpl implements StrategyService {
     @Nonnull
     private DMICondition createDmi(@Nonnull ConditionConfig config) {
         int period = getIntParam(config, "period", 14);
-        DMISignalType signalType = getEnumParam(config, "divergenceType", DMISignalType.class);
+        DMISignalType signalType = getEnumParam(config, "dmiSignalType", DMISignalType.class);
         double threshold = getDoubleParam(config, "threshold", 25.0);
         double divergenceThreshold = getDoubleParam(config, "divergenceThreshold", 10.0);
 
@@ -273,6 +277,35 @@ public class StrategyServiceImpl implements StrategyService {
 
         return new DMICondition(period, signalType, threshold, divergenceThreshold);
     }
+
+    @Nonnull
+    private ATRCondition createAtr(@Nonnull ConditionConfig config) {
+        int period = getIntParam(config, "period");
+        double multiplier = getDoubleParam(config, "multiplier");
+        boolean isAbove = getBooleanParam(config, "isAbove");
+        boolean compareWithPrice = getBooleanParam(config, "compareWithPrice");
+
+        log.debug("Creating ATR condition with period={}, multiplier={}, isAbove={}, compareWithPrice={}",
+                period, multiplier, isAbove, compareWithPrice);
+
+        return new ATRCondition(period, multiplier, isAbove, compareWithPrice);
+    }
+
+    /* TODO: Implement pivot points
+    @Nonnull
+    private PivotPointsCondition createPivotPoints(@Nonnull ConditionConfig config) {
+        PivotType pivotType = getEnumParam(config, "pivotType", PivotType.class);
+        String level = getStringParam(config, "level");
+        boolean crossAbove = getBooleanParam(config, "crossAbove");
+        boolean useClose = getBooleanParam(config, "useClose");
+
+        log.debug("Creating Pivot Points condition with level={}, pivotType={}, crossAbove={}, useClose={}",
+                level, pivotType, crossAbove, useClose);
+
+        return new PivotPointsCondition(pivotType, level, crossAbove, useClose);
+
+    }
+     */
 
     @Nonnull
     private CompositeCondition createAndComposite(@Nonnull ConditionConfig config) {
@@ -389,9 +422,6 @@ public class StrategyServiceImpl implements StrategyService {
         };
     }
 
-    /**
-     * Get integer parameter with a default value if not present
-     */
     private int getIntParam(
             @Nonnull ConditionConfig config,
             @Nonnull String paramName,
@@ -448,9 +478,6 @@ public class StrategyServiceImpl implements StrategyService {
         };
     }
 
-    /**
-     * Get double parameter with a default value if not present
-     */
     private double getDoubleParam(
             @Nonnull ConditionConfig config,
             @Nonnull String paramName,
@@ -529,5 +556,4 @@ public class StrategyServiceImpl implements StrategyService {
                     "' is not a valid value for enum type " + enumClass.getSimpleName() + ": " + value);
         }
     }
-
 }

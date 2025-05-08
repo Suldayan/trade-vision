@@ -12,10 +12,6 @@ public class ROCCondition implements Condition {
     private final double threshold; // Value to compare ROC against
     private final Direction direction; // Direction for comparison
 
-    public ROCCondition(int period, double threshold, boolean isAbove) {
-        this(period, threshold, isAbove ? Direction.ABOVE : Direction.BELOW);
-    }
-
     @Override
     public boolean evaluate(MarketData data, int currentIndex) {
         // Ensure we have enough data points
@@ -26,12 +22,10 @@ public class ROCCondition implements Condition {
         double[] prices = data.close(); // Using close prices for ROC calculation
         double[] rocValues = IndicatorUtils.roc(prices, period);
 
-        // Check if ROC value is valid at the current index
         if (Double.isNaN(rocValues[currentIndex])) {
             return false;
         }
 
-        // Get current ROC value
         double currentROC = rocValues[currentIndex];
 
         // For crossing conditions, we need to check the previous value as well
