@@ -49,7 +49,8 @@ export const DEFAULT_PARAMETERS: Record<string, Record<string, any>> = {
   ROC_CROSSOVER: {
     period: 12,
     threshold: 0,
-    crossAbove: true
+    crossAbove: true,
+    isBullish: true
   },
   ATR: {
     period: 14,
@@ -171,7 +172,7 @@ export const validateCondition = (condition: ConditionConfig): void => {
       break;
       
     case 'ROC_CROSSOVER':
-      checkRequiredParams(condition, ['period', 'threshold', 'crossAbove']);
+      checkRequiredParams(condition, ['period', 'threshold', 'crossAbove','isBullish']);
       break;
       
     case 'ATR':
