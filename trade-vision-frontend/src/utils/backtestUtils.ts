@@ -84,7 +84,7 @@ export const DEFAULT_PARAMETERS: Record<string, Record<string, any>> = {
     adxPeriod: 14,
     diPeriod: 14,
     adxThreshold: 25,
-    dmiComponent: 'di_plus_above'
+    dmiSignalType: 'DI_PLUS_ABOVE'
   },
   AND: {
     conditions: []
@@ -192,7 +192,7 @@ export const validateCondition = (condition: ConditionConfig): void => {
       break;
       
     case 'DMI':
-      checkRequiredParams(condition, ['adxPeriod', 'diPeriod', 'adxThreshold', 'dmiComponent']);
+      checkRequiredParams(condition, ['adxPeriod', 'diPeriod', 'adxThreshold']);
       break;
       
     default:
