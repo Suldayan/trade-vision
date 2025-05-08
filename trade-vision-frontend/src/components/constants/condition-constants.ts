@@ -77,6 +77,15 @@ label: string;
 
 // Map of condition types to their parameter options
 export const PARAMETER_OPTIONS: Record<string, Record<string, ParamOption[]>> = {
+ROC: {
+  direction: [
+    { value: 'ABOVE', label: 'Above' },
+    { value: 'BELOW', label: 'Below' },
+    { value: 'EQUAL', label: 'Equal' },
+    { value: 'CROSSING_ABOVE', label: 'Crossing Above' },
+    { value: 'CROSSING_BELOW', label: 'Crossing Below' }
+  ]
+},
 PIVOT_POINTS: {
   pivotType: [
     { value: 'standard', label: 'Standard' },

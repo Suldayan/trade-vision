@@ -39,11 +39,7 @@ export const DEFAULT_PARAMETERS: Record<string, Record<string, any>> = {
   ROC: {
     period: 12,
     threshold: 0,
-    above: false,
-    below: false,
-    crossAbove: false,
-    crossBelow: false,
-    equal: false
+    direction: 'ABOVE'
   },
   ROC_DIVERGENCE: {
     period: 14,
@@ -62,7 +58,7 @@ export const DEFAULT_PARAMETERS: Record<string, Record<string, any>> = {
     compareWithPrice: false
   },
   OBV: {
-    lookbackPeriod: 20,
+    period: 20,
     threshold: 0,
     isIncreasing: true
   },
@@ -184,7 +180,7 @@ export const validateCondition = (condition: ConditionConfig): void => {
       break;
       
     case 'OBV':
-      checkRequiredParams(condition, ['lookbackPeriod', 'threshold', 'isIncreasing']);
+      checkRequiredParams(condition, ['period', 'threshold', 'isIncreasing']);
       break;
       
     case 'ICHIMOKU_CLOUD':
