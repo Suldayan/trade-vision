@@ -42,13 +42,13 @@ export const DEFAULT_PARAMETERS: Record<string, Record<string, any>> = {
     direction: 'ABOVE'
   },
   ROC_DIVERGENCE: {
-    period: 14,
-    lookbackPeriods: 3,
-    divergenceType: 'bullish'
+    period: 12,
+    divergencePeriod: 14,
+    isBullish: true
   },
   ROC_CROSSOVER: {
-    fastPeriod: 5,
-    slowPeriod: 20,
+    period: 12,
+    threshold: 0,
     crossAbove: true
   },
   ATR: {
@@ -63,11 +63,10 @@ export const DEFAULT_PARAMETERS: Record<string, Record<string, any>> = {
     isIncreasing: true
   },
   ICHIMOKU_CLOUD: {
-    conversionPeriod: 9,
-    basePeriod: 26,
-    spanPeriod: 52,
-    displacement: 26,
-    cloudComponent: 'price_above_cloud',
+    tenkanPeriod: 9,
+    kijunPeriod: 26,
+    chikouPeriod: 52,
+    signalType: 'PRICE_ABOVE_CLOUD',
     isBullish: true
   },
   PIVOT_POINTS: {
@@ -168,11 +167,11 @@ export const validateCondition = (condition: ConditionConfig): void => {
       break;
       
     case 'ROC_DIVERGENCE':
-      checkRequiredParams(condition, ['period', 'lookbackPeriods', 'divergenceType']);
+      checkRequiredParams(condition, ['period', 'divergencePeriod', 'isBullish']);
       break;
       
     case 'ROC_CROSSOVER':
-      checkRequiredParams(condition, ['fastPeriod', 'slowPeriod', 'crossAbove']);
+      checkRequiredParams(condition, ['period', 'threshold', 'crossAbove']);
       break;
       
     case 'ATR':
@@ -184,7 +183,7 @@ export const validateCondition = (condition: ConditionConfig): void => {
       break;
       
     case 'ICHIMOKU_CLOUD':
-      checkRequiredParams(condition, ['conversionPeriod', 'basePeriod', 'spanPeriod', 'displacement', 'cloudComponent']);
+      checkRequiredParams(condition, ['tenkanPeriod', 'kijunPeriod', 'chikouPeriod']);
       break;
       
     case 'PIVOT_POINTS':
