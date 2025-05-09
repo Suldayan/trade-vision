@@ -88,11 +88,11 @@ ROC: {
 },
 PIVOT_POINTS: {
   pivotType: [
-    { value: 'standard', label: 'Standard' },
-    { value: 'fibonacci', label: 'Fibonacci' },
-    { value: 'woodie', label: 'Woodie' },
-    { value: 'camarilla', label: 'Camarilla' },
-    { value: 'demark', label: 'DeMark' }
+    { value: 'STANDARD', label: 'Standard' },
+    { value: 'FIBONACCI', label: 'Fibonacci' },
+    { value: 'WOODIE', label: 'Woodie' },
+    { value: 'CAMARILLA', label: 'Camarilla' },
+    { value: 'DEMARK', label: 'DeMark' }
   ],
   level: [
     { value: 'PP', label: 'Pivot Point (PP)' },

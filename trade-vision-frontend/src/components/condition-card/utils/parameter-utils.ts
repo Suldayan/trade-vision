@@ -49,7 +49,7 @@ export const getParamMaxValue = (paramName: string): number => {
 
 export const isStringOptionParam = (conditionType: string, paramName: string): boolean => {
   const stringOptionParams: Record<string, string[]> = {
-    'PIVOT_POINTS': ['pivotType', 'level'],
+    'PIVOT_POINTS': ['pivotType', ',level'],
     'ICHIMOKU_CLOUD': ['signalType'],
     'ROC_DIVERGENCE': ['divergenceType'],
     'DMI': ['dmiSignalType']

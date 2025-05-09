@@ -71,14 +71,11 @@ export const DEFAULT_PARAMETERS: Record<string, Record<string, any>> = {
     isBullish: true
   },
   PIVOT_POINTS: {
-    type: 'standard',
+    pivotType: 'STANDARD',
     level: 'S1',
     tolerance: 0.01,
-    above: false,
-    below: false,
+    useClose: false,
     crossAbove: false,
-    crossBelow: false,
-    equal: false
   },
   DMI: {
     adxPeriod: 14,
@@ -188,7 +185,7 @@ export const validateCondition = (condition: ConditionConfig): void => {
       break;
       
     case 'PIVOT_POINTS':
-      checkRequiredParams(condition, ['type', 'level', 'tolerance']);
+      checkRequiredParams(condition, ['pivotType', 'level', 'tolerance']);
       break;
       
     case 'DMI':
