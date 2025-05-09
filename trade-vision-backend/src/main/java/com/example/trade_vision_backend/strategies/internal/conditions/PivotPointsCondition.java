@@ -4,6 +4,7 @@ import com.example.trade_vision_backend.indicators.PivotType;
 import com.example.trade_vision_backend.market.MarketData;
 import com.example.trade_vision_backend.indicators.IndicatorUtils;
 import com.example.trade_vision_backend.strategies.Condition;
+import com.example.trade_vision_backend.strategies.internal.enums.PivotLevel;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Map;
@@ -11,7 +12,7 @@ import java.util.Map;
 @RequiredArgsConstructor
 public class PivotPointsCondition implements Condition {
     private final PivotType pivotType;
-    private final String pivotLevel; // "PP", "R1", "R2", "R3", "S1", "S2", "S3"
+    private final PivotLevel pivotLevel;
     private final boolean crossAbove; // true for crossing above, false for crossing below
     private final boolean useClose; // true to use close price, false to use low/high
 
@@ -25,12 +26,13 @@ public class PivotPointsCondition implements Condition {
         double[] open = data.open();
 
         Map<String, double[]> pivotPoints = IndicatorUtils.pivotPoints(high, low, close, open, pivotType);
+        String pivotLevelKey = pivotLevel.name();
 
-        if (!pivotPoints.containsKey(pivotLevel)) {
+        if (!pivotPoints.containsKey(pivotLevelKey)) {
             throw new IllegalArgumentException("Invalid pivot level: " + pivotLevel);
         }
 
-        double[] pivotLevelValues = pivotPoints.get(pivotLevel);
+        double[] pivotLevelValues = pivotPoints.get(pivotLevelKey);
 
         if (Double.isNaN(pivotLevelValues[currentIndex]) ||
                 Double.isNaN(pivotLevelValues[currentIndex - 1])) {
@@ -60,5 +62,13 @@ public class PivotPointsCondition implements Condition {
         } else {
             return previousPrice > previousPivotLevel && currentPrice < currentPivotLevel;
         }
+    }
+    
+    @Override
+    public String toString() {
+        String direction = crossAbove ? "crosses above" : "crosses below";
+        String priceType = useClose ? "Close price" : "High/Low price";
+        return String.format("%s %s %s pivot level (%s)",
+                priceType, direction, pivotLevel.name(), pivotType);
     }
 }

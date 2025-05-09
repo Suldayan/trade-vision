@@ -10,6 +10,7 @@ import com.example.trade_vision_backend.strategies.internal.conditions.*;
 import com.example.trade_vision_backend.strategies.internal.enums.DMISignalType;
 import com.example.trade_vision_backend.strategies.internal.enums.Direction;
 import com.example.trade_vision_backend.strategies.internal.enums.IchimokuSignalType;
+import com.example.trade_vision_backend.strategies.internal.enums.PivotLevel;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -89,7 +90,7 @@ public class StrategyServiceImpl implements StrategyService {
                 case "OBV_CROSSOVER" -> createObvCrossover(config);
                 case "OBV_POSITION" -> createObvPosition(config);
                 case "ICHIMOKU_CLOUD" -> createIchimokuCloud(config);
-                //case "PIVOT_POINTS" -> createPivotPoints(config);
+                case "PIVOT_POINTS" -> createPivotPoints(config);
                 case "ATR" -> createAtr(config);
                 case "DMI" -> createDmi(config);
                 case "AND" -> createAndComposite(config);
@@ -291,11 +292,10 @@ public class StrategyServiceImpl implements StrategyService {
         return new ATRCondition(period, multiplier, isAbove, compareWithPrice);
     }
 
-    /* TODO: Implement pivot points
     @Nonnull
     private PivotPointsCondition createPivotPoints(@Nonnull ConditionConfig config) {
         PivotType pivotType = getEnumParam(config, "pivotType", PivotType.class);
-        String level = getStringParam(config, "level");
+        PivotLevel level = getEnumParam(config, "level", PivotLevel.class);
         boolean crossAbove = getBooleanParam(config, "crossAbove");
         boolean useClose = getBooleanParam(config, "useClose");
 
@@ -305,7 +305,6 @@ public class StrategyServiceImpl implements StrategyService {
         return new PivotPointsCondition(pivotType, level, crossAbove, useClose);
 
     }
-     */
 
     @Nonnull
     private CompositeCondition createAndComposite(@Nonnull ConditionConfig config) {
