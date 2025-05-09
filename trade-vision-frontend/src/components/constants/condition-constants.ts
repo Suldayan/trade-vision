@@ -126,6 +126,16 @@ ICHIMOKU_CLOUD: {
     { value: 'STRONG_BEARISH', label: 'Strong Bearish Signal' }
   ]
 },
+OBV: {
+  conditionType: [
+    {value: 'ABOVE_MA', label: 'Above MA'},
+    {value: 'BELOW_MA', label: 'Below MA'},
+    {value: 'CROSS_ABOVE_MA', label: 'Cross Above MA'},
+    {value: 'CROSS_BELOW_MA', label: 'Cross Below MA'},
+    {value: 'INCREASING', label: 'Increasing'},
+    {value: 'DECREASING', label: 'Decreasing'}
+  ]
+},
 ROC_DIVERGENCE: {
   divergenceType: [
     { value: 'bullish', label: 'Bullish Divergence' },

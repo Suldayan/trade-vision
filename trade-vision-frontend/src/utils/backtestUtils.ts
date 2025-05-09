@@ -60,8 +60,7 @@ export const DEFAULT_PARAMETERS: Record<string, Record<string, any>> = {
   },
   OBV: {
     period: 20,
-    threshold: 0,
-    isIncreasing: true
+    conditionType: 'ABOVE_MA'
   },
   ICHIMOKU_CLOUD: {
     tenkanPeriod: 9,
@@ -177,7 +176,7 @@ export const validateCondition = (condition: ConditionConfig): void => {
       break;
       
     case 'OBV':
-      checkRequiredParams(condition, ['period', 'threshold', 'isIncreasing']);
+      checkRequiredParams(condition, ['period']);
       break;
       
     case 'ICHIMOKU_CLOUD':
