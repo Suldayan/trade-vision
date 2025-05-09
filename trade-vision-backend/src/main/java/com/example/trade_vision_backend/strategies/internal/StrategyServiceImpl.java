@@ -7,10 +7,7 @@ import com.example.trade_vision_backend.domain.ConditionConfig;
 import com.example.trade_vision_backend.strategies.Strategy;
 import com.example.trade_vision_backend.strategies.StrategyService;
 import com.example.trade_vision_backend.strategies.internal.conditions.*;
-import com.example.trade_vision_backend.strategies.internal.enums.DMISignalType;
-import com.example.trade_vision_backend.strategies.internal.enums.Direction;
-import com.example.trade_vision_backend.strategies.internal.enums.IchimokuSignalType;
-import com.example.trade_vision_backend.strategies.internal.enums.PivotLevel;
+import com.example.trade_vision_backend.strategies.internal.enums.*;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -223,7 +220,7 @@ public class StrategyServiceImpl implements StrategyService {
     @Nonnull
     private OBVCondition createObv(@Nonnull ConditionConfig config) {
         int period = getIntParam(config, "period");
-        String conditionType = config.getParameters().get("conditionType").toString();
+        ConditionType conditionType = getEnumParam(config, "conditionType", ConditionType.class);
 
         log.debug("Creating OBV condition with period={}, conditionType={}",
                 period, conditionType);
