@@ -9,15 +9,6 @@ spring:
       jdbc-schema-initialization:
         enabled: true
 
-#  datasource:
-#    url: ${SUPA_DB_URL}
-#    username: ${SUPA_DB_USERNAME}
-#    password: ${SUPA_DB_PASSWORD}
-#    driver-class-name: org.postgresql.Driver
-#  jpa:
-#    hibernate:
-#      ddl-auto: none
-
   flyway:
     enabled: false
     baseline-on-migration: true

@@ -28,10 +28,12 @@ public class BackTesterController {
     private final StrategyService strategyService;
     private final BackTesterService backTesterService;
 
-    @CrossOrigin(origins = "http://localhost:5173")
+    private static String URL;
+
+    @CrossOrigin(origins = {"http://localhost:5173", })
     @PostMapping(value = "/backtest", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BackTestResult> executeBacktest(
-            @RequestPart("file") @Nonnull MultipartFile file,
+            @RequestPart("file") @Valid @Nonnull MultipartFile file,
             @RequestPart("request") @Valid @Nonnull BackTestRequest request) {
 
         try {
