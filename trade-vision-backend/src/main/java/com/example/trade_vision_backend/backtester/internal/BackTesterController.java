@@ -10,6 +10,7 @@ import jakarta.annotation.Nonnull;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
@@ -28,9 +29,6 @@ public class BackTesterController {
     private final StrategyService strategyService;
     private final BackTesterService backTesterService;
 
-    private static String URL;
-
-    @CrossOrigin(origins = {"http://localhost:5173", })
     @PostMapping(value = "/backtest", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<BackTestResult> executeBacktest(
             @RequestPart("file") @Valid @Nonnull MultipartFile file,

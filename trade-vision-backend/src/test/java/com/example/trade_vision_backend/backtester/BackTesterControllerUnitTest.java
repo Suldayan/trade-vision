@@ -19,6 +19,8 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
@@ -37,6 +39,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @ExtendWith(MockitoExtension.class)
 @DisplayName("BackTester Controller Unit Tests")
+@ActiveProfiles("test")
 public class BackTesterControllerUnitTest {
 
     @Mock
