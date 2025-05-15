@@ -112,7 +112,7 @@ public class BackTesterControllerUnitTest {
 
         doReturn(expectedResult).when(backTesterService).runBackTest(any(Strategy.class), any(MarketData.class), any(BackTestRequest.class));
 
-        mockMvc.perform(multipart("/api/v1/strategy/backtest")
+        mockMvc.perform(multipart("/backtest/execute")
                         .file(csvFile)
                         .file(jsonFile))
                 .andExpect(status().isOk())
@@ -151,7 +151,7 @@ public class BackTesterControllerUnitTest {
 
         when(csvImporterService.importCsvFromStream(any(InputStream.class))).thenThrow(new java.io.IOException("CSV parsing error"));
 
-        mockMvc.perform(multipart("/api/v1/strategy/backtest")
+        mockMvc.perform(multipart("/backtest/execute")
                         .file(csvFile)
                         .file(jsonFile))
                 .andExpect(status().isBadRequest());
@@ -184,7 +184,7 @@ public class BackTesterControllerUnitTest {
         when(csvImporterService.importCsvFromStream(any(InputStream.class))).thenReturn(mockMarketData);
         when(strategyService.buildStrategyFromRequest(any(BackTestRequest.class))).thenThrow(new RuntimeException("Strategy building error"));
 
-        mockMvc.perform(multipart("/api/v1/strategy/backtest")
+        mockMvc.perform(multipart("/backtest/execute")
                         .file(csvFile)
                         .file(jsonFile))
                 .andExpect(status().isInternalServerError());

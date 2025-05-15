@@ -9,6 +9,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 @Configuration
 public class GlobalCorsConfig {
+    private final static String BACKTEST_MAPPING = "/backtest/execute";
 
     @Value("${frontend.url}")
     private String frontendUrl;
@@ -16,9 +17,10 @@ public class GlobalCorsConfig {
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
+
             @Override
             public void addCorsMappings(@Nonnull CorsRegistry registry) {
-                registry.addMapping("/api/v1/strategy/**")
+                registry.addMapping(BACKTEST_MAPPING)
                         .allowedOrigins(frontendUrl)
                         .allowedMethods("POST", "OPTIONS")
                         .allowCredentials(true)
@@ -27,7 +29,8 @@ public class GlobalCorsConfig {
                                 "Accept",
                                 "Origin",
                                 "X-Requested-With"
-                        );
+                        )
+                        .maxAge(3600);
             }
         };
     }
