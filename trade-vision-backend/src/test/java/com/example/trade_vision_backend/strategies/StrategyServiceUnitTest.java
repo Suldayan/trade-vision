@@ -1,7 +1,7 @@
 package com.example.trade_vision_backend.strategies;
 
-import com.example.trade_vision_backend.domain.BackTestRequest;
-import com.example.trade_vision_backend.domain.ConditionConfig;
+import com.example.trade_vision_backend.common.BackTestRequest;
+import com.example.trade_vision_backend.common.ConditionConfig;
 import com.example.trade_vision_backend.market.MarketData;
 import com.example.trade_vision_backend.strategies.internal.conditions.RSICondition;
 import com.example.trade_vision_backend.strategies.internal.conditions.SMACrossoverCondition;

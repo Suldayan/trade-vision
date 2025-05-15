@@ -1,4 +1,4 @@
-package com.example.trade_vision_backend.domain;
+package com.example.trade_vision_backend.common;
 
 
 import lombok.Builder;

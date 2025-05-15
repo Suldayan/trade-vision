@@ -3,8 +3,8 @@ package com.example.trade_vision_backend.backtester;
 import com.example.trade_vision_backend.backtester.internal.BackTestResult;
 import com.example.trade_vision_backend.backtester.internal.BackTesterController;
 import com.example.trade_vision_backend.backtester.internal.Trade;
-import com.example.trade_vision_backend.domain.BackTestRequest;
-import com.example.trade_vision_backend.domain.ConditionConfig;
+import com.example.trade_vision_backend.common.BackTestRequest;
+import com.example.trade_vision_backend.common.ConditionConfig;
 import com.example.trade_vision_backend.market.CsvImporterService;
 import com.example.trade_vision_backend.market.MarketData;
 import com.example.trade_vision_backend.strategies.StrategyService;
@@ -20,7 +20,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.ActiveProfiles;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 

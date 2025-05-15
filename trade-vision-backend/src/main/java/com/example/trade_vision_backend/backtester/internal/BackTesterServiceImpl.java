@@ -1,6 +1,6 @@
 package com.example.trade_vision_backend.backtester.internal;
 
-import com.example.trade_vision_backend.domain.BackTestRequest;
+import com.example.trade_vision_backend.common.BackTestRequest;
 import com.example.trade_vision_backend.backtester.BackTesterService;
 import com.example.trade_vision_backend.market.MarketData;
 import com.example.trade_vision_backend.strategies.Strategy;

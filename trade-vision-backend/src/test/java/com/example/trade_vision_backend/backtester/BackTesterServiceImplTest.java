@@ -1,13 +1,13 @@
 package com.example.trade_vision_backend.backtester;
 
 import com.example.trade_vision_backend.backtester.internal.*;
-import com.example.trade_vision_backend.domain.BackTestRequest;
+import com.example.trade_vision_backend.common.BackTestRequest;
 import com.example.trade_vision_backend.market.MarketData;
 import com.example.trade_vision_backend.market.MarketDataPoint;
 import com.example.trade_vision_backend.strategies.Condition;
 import com.example.trade_vision_backend.strategies.Strategy;
 import com.example.trade_vision_backend.strategies.StrategyService;
-import com.example.trade_vision_backend.domain.ConditionConfig;
+import com.example.trade_vision_backend.common.ConditionConfig;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
