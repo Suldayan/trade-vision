@@ -16,7 +16,7 @@ export const runBacktest = async (
   formData.append('request', requestBlob);
   
   try {
-    const response = await fetch(`${API_URL}/strategy/backtest`, {
+    const response = await fetch(`${API_URL}`, {
       method: 'POST',
       body: formData,
     });
