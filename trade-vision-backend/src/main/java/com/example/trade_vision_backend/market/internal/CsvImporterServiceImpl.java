@@ -52,8 +52,6 @@ public class CsvImporterServiceImpl implements CsvImporterService {
             DateTimeFormatter.ISO_DATE_TIME
     );
 
-    private static final int BATCH_SIZE = 10000;
-
     private static class ImportStats {
         int processedRows = 0;
         int skippedRows = 0;

@@ -3,13 +3,16 @@ package com.example.trade_vision_backend.backtester.internal;
 import com.example.trade_vision_backend.common.BackTestRequest;
 import com.example.trade_vision_backend.backtester.BackTesterService;
 import com.example.trade_vision_backend.market.MarketData;
+import com.example.trade_vision_backend.market.MarketDataPoint;
 import com.example.trade_vision_backend.strategies.Strategy;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -44,6 +47,15 @@ public class BackTesterServiceImpl implements BackTesterService {
         int entrySignals = 0;
         int exitSignals = 0;
 
+        List<MarketDataPoint> dataPoints = marketData.getDataPoints();
+        List<LocalDateTime> dates = dataPoints.stream()
+                .map(MarketDataPoint::timestamp)
+                .toList();
+
+        if (dates.size() != dataPoints.size()) {
+            throw new IllegalArgumentException("Market data timestamps don't match price data length");
+        }
+
         for (int i = 1; i < dataLength; i++) {
             double currentPrice = close[i];
 
@@ -54,6 +66,7 @@ public class BackTesterServiceImpl implements BackTesterService {
                 double positionSize = entryPrice > 0 ? currentCapital / entryPrice : 0;
                 double exitValue = positionSize * currentPrice;
                 double pnl = exitValue - (positionSize * entryPrice);
+                LocalDateTime date = dates.get(i);
 
                 // Apply transaction costs
                 double commission = exitValue * request.getCommissionRate();
@@ -63,7 +76,7 @@ public class BackTesterServiceImpl implements BackTesterService {
                 currentCapital += pnl;
 
                 // Record trade
-                trades.add(new Trade(entryPrice, currentPrice, positionSize, pnl));
+                trades.add(new Trade(entryPrice, currentPrice, positionSize, pnl, date));
 
                 log.debug("Exit signal at index {}: Exit price: ${}, P&L: ${}, Commission: ${}, Updated capital: ${}",
                         i, currentPrice, pnl, commission, currentCapital);
@@ -99,10 +112,12 @@ public class BackTesterServiceImpl implements BackTesterService {
             pnl -= commission;
             currentCapital += pnl;
 
+            LocalDateTime finalDate = dates.get(dataLength - 1);
+
             log.debug("Closing open position at end of backtest: Exit price: ${}, P&L: ${}, Commission: ${}, Final capital: ${}",
                     close[dataLength - 1], pnl, commission, currentCapital);
 
-            trades.add(new Trade(entryPrice, close[dataLength - 1], positionSize, pnl));
+            trades.add(new Trade(entryPrice, close[dataLength - 1], positionSize, pnl, finalDate));
         }
 
         log.info("Backtest completed with {} trades ({} entry signals, {} exit signals)",

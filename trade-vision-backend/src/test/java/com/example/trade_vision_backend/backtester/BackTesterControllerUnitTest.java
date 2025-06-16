@@ -24,6 +24,7 @@ import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.io.InputStream;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -92,7 +93,7 @@ public class BackTesterControllerUnitTest {
         Strategy mockStrategy = new Strategy();
 
         List<Trade> trades = new ArrayList<>();
-        trades.add(new Trade(100.0, 105.0, 10.0, 50.0));
+        trades.add(new Trade(100.0, 105.0, 10.0, 50.0, LocalDateTime.of(2023, 1, 1, 0, 0)));
 
         List<Double> equityCurve = List.of(10000.0, 10050.0);
 
