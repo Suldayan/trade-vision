@@ -30,7 +30,7 @@ public class BackTestRequest {
     private double slippagePercent;
 }
 
-// Example json from a user p
+// Example json from a user
 /*
 {
   "initialCapital": 10000.0,

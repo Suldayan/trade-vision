@@ -84,7 +84,6 @@ public class StrategyServiceImpl implements StrategyService {
                 case "ROC_CROSSOVER" -> createRateOfChangeCrossover(config);
                 case "ROC_DIVERGENCE" -> createRateOfChangeDivergence(config);
                 case "OBV" -> createObv(config);
-                case "OBV_CROSSOVER" -> createObvCrossover(config);
                 case "OBV_POSITION" -> createObvPosition(config);
                 case "ICHIMOKU_CLOUD" -> createIchimokuCloud(config);
                 case "PIVOT_POINTS" -> createPivotPoints(config);
@@ -226,17 +225,6 @@ public class StrategyServiceImpl implements StrategyService {
                 period, conditionType);
 
         return new OBVCondition(period, conditionType);
-    }
-
-    @Nonnull
-    private OBVCondition createObvCrossover(@Nonnull ConditionConfig config) {
-        int period = getIntParam(config, "period");
-        boolean crossAbove = getBooleanParam(config, "crossAbove");
-
-        log.debug("Creating OBV crossover condition with period={}, crossAbove={}",
-                period, crossAbove);
-
-        return new OBVCondition(period, crossAbove);
     }
 
     @Nonnull

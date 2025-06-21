@@ -18,6 +18,9 @@ public class GlobalCorsConfig {
     @Value("${health.url}")
     private String healthUrl;
 
+    @Value("${cors.allowed.origins}")
+    private String[] allowedOrigins;
+
     @Bean
     public WebMvcConfigurer corsConfigurer() {
         return new WebMvcConfigurer() {
@@ -25,7 +28,7 @@ public class GlobalCorsConfig {
             @Override
             public void addCorsMappings(@Nonnull CorsRegistry registry) {
                 registry.addMapping(BACKTEST_MAPPING)
-                        .allowedOrigins(frontendUrl)
+                        .allowedOrigins(allowedOrigins)
                         .allowedMethods("POST", "OPTIONS")
                         .allowCredentials(true)
                         .allowedHeaders(
