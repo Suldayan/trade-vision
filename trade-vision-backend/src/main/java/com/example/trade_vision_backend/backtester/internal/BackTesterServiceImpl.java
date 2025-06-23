@@ -7,11 +7,14 @@ import com.example.trade_vision_backend.market.MarketDataPoint;
 import com.example.trade_vision_backend.strategies.Strategy;
 import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.stream.Collectors;
 
 @Service
@@ -126,6 +129,26 @@ public class BackTesterServiceImpl implements BackTesterService {
                 initialCapital, currentCapital, ((currentCapital - initialCapital) / initialCapital) * 100);
 
         return calculatePerformanceMetrics(initialCapital, currentCapital, trades, equityCurve);
+    }
+
+    @Nonnull
+    @Async("backtestExecutor")
+    @Override
+    public CompletableFuture<BackTestResult> runConcurrentBackTests(
+            @Nonnull Strategy strategy,
+            @Nonnull MarketData marketData,
+            @Nonnull BackTestRequest request) {
+        log.debug("Running concurrent backtest on thread: {}", Thread.currentThread().getName());
+
+        try {
+            BackTestResult result = runBackTest(strategy, marketData, request);
+            return CompletableFuture.completedFuture(result);
+        } catch (Exception e) {
+            log.error("Error during concurrent backtest execution", e);
+            CompletableFuture<BackTestResult> future = new CompletableFuture<>();
+            future.completeExceptionally(e);
+            return future;
+        }
     }
 
     @Nonnull
