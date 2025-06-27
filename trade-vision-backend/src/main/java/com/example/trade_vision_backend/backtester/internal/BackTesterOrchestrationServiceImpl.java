@@ -132,10 +132,14 @@ public class BackTesterOrchestrationServiceImpl implements BackTesterOrchestrati
     }
 
     private Throwable getRootCause(Throwable throwable) {
-        Throwable rootCause = throwable;
-        while (rootCause.getCause() != null) {
-            rootCause = rootCause.getCause();
+        Throwable current = throwable;
+        while (current.getCause() != null) {
+            if (current instanceof BackTesterExceptions.BackTestOrchestrationException ||
+                    current instanceof BackTesterExceptions.InvalidRequestException) {
+                return current;
+            }
+            current = current.getCause();
         }
-        return rootCause;
+        return current;
     }
 }
