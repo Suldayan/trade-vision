@@ -24,8 +24,5 @@ public class BackTesterExceptions {
         public BackTestOrchestrationException(String message, Throwable cause) {
             super(message, cause);
         }
-        public BackTestOrchestrationException(String message) {
-            super(message);
-        }
     }
 }
