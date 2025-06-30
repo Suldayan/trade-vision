@@ -30,8 +30,9 @@ public class BackTestRequest {
     private double slippagePercent;
 }
 
-// Example json from a user
 /*
+Example json from a user (1 backtest request)
+
 {
   "initialCapital": 10000.0,
   "riskPerTrade": 0.02,

@@ -11,15 +11,14 @@ import jakarta.annotation.Nonnull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.time.Duration;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.concurrent.Executor;
 
 @Service
@@ -28,76 +27,77 @@ public class BackTesterOrchestrationServiceImpl implements BackTesterOrchestrati
     private final CsvImporterService csvImporterService;
     private final StrategyService strategyService;
     private final BackTesterService backTesterService;
-    @Qualifier("backtestExecutor")
     private final Executor backtestExecutor;
 
+    private static final int MAX_BACKTEST_REQUESTS = 5;
+
     public BackTesterOrchestrationServiceImpl(
-            CsvImporterService csvImporterService, StrategyService strategyService, BackTesterService backTesterService, Executor backtestExecutor) {
+            CsvImporterService csvImporterService,
+            StrategyService strategyService,
+            BackTesterService backTesterService,
+            @Qualifier("backtestExecutor") Executor backtestExecutor) {
         this.csvImporterService = csvImporterService;
         this.strategyService = strategyService;
         this.backTesterService = backTesterService;
         this.backtestExecutor = backtestExecutor;
     }
 
-    private static final Integer MAX_BACKTEST_REQUESTS = 5;
-
     @Nonnull
     @Override
-    public DeferredResult<List<BackTestResult>> runOrchestration(
+    public CompletableFuture<List<BackTestResult>> runOrchestration(
             @Nonnull MultipartFile file,
             @Nonnull List<BackTestRequest> requests) {
-        validateRequests(requests);
-        DeferredResult<List<BackTestResult>> deferredResult = new DeferredResult<>(Duration.ofMinutes(10).toMillis());
-
-        if (requests.size() > MAX_BACKTEST_REQUESTS) {
-            deferredResult.setErrorResult(new BackTesterExceptions.InvalidRequestException(
-                    "Number of requests exceeds maximum for concurrent backtests: " + MAX_BACKTEST_REQUESTS));
-            return deferredResult;
-        }
 
         try {
-            // Read file once and cache the data
-            byte[] fileBytes = file.getBytes();
-
-            List<CompletableFuture<BackTestResult>> backtestFutures = requests.stream()
-                    .map(request -> CompletableFuture.supplyAsync(() ->
-                            runSingleBacktest(fileBytes, request), backtestExecutor))
-                    .toList();
-
-            CompletableFuture<List<BackTestResult>> allResults = CompletableFuture.allOf(
-                    backtestFutures.toArray(new CompletableFuture[0])
-            ).thenApply(v ->
-                    backtestFutures.stream()
-                            .map(CompletableFuture::join)
-                            .toList()
-            );
-
-            allResults.whenComplete((results, throwable) -> {
-                if (throwable != null) {
-                    Throwable rootCause = getRootCause(throwable);
-                    log.error("Error completing backtests", throwable);
-                    deferredResult.setErrorResult(rootCause);
-                } else {
-                    log.info("Successfully completed {} backtests", results.size());
-                    deferredResult.setResult(results);
-                }
-            });
-
-        } catch (IOException e) {
-            log.error("Failed to process market data file", e);
-            deferredResult.setErrorResult(new BackTesterExceptions.InvalidRequestException("Failed to process market data file", e));
+            validateRequests(requests);
+            if (requests.size() > MAX_BACKTEST_REQUESTS) {
+                return CompletableFuture.failedFuture(
+                        new BackTesterExceptions.InvalidRequestException(
+                                "Number of requests exceeds maximum for concurrent backtests: " + MAX_BACKTEST_REQUESTS));
+            }
         } catch (Exception e) {
-            log.error("Error setting up backtest", e);
-            deferredResult.setErrorResult(new BackTesterExceptions.BackTestOrchestrationException("Error setting up backtest", e));
+            return CompletableFuture.failedFuture(e);
         }
 
-        return deferredResult;
+        return CompletableFuture
+                .supplyAsync(() -> {
+                    try {
+                        return file.getBytes();
+                    } catch (IOException e) {
+                        throw new CompletionException(
+                                new BackTesterExceptions.InvalidRequestException("Failed to process market data file", e));
+                    }
+                }, backtestExecutor)
+                .thenCompose(fileBytes -> runBacktests(fileBytes, requests))
+                .whenComplete((results, throwable) -> {
+                    if (throwable != null) {
+                        log.error("Error completing backtests for {} requests", requests.size(), throwable);
+                    } else {
+                        log.info("Successfully completed {} backtests", results.size());
+                    }
+                });
     }
 
     @Nonnull
-    private BackTestResult runSingleBacktest(byte[] fileBytes, BackTestRequest request) {
-        try {
-            log.info("Starting backtest on thread: {} with strategy containing {} entry and {} exit conditions",
+    private CompletableFuture<List<BackTestResult>> runBacktests(byte[] fileBytes, @Nonnull List<BackTestRequest> requests) {
+        List<CompletableFuture<BackTestResult>> backtestFutures = requests.stream()
+                .map(request -> runSingleBacktest(fileBytes, request))
+                .toList();
+
+        return CompletableFuture.allOf(backtestFutures.toArray(CompletableFuture[]::new))
+                .thenApply(ignored -> backtestFutures.stream()
+                        .map(CompletableFuture::join)
+                        .toList())
+                .exceptionally(throwable -> {
+                    backtestFutures.forEach(future -> future.cancel(true));
+                    throw new CompletionException(extractMeaningfulException(throwable));
+                });
+    }
+
+    @Nonnull
+    private CompletableFuture<BackTestResult> runSingleBacktest(byte[] fileBytes, @Nonnull BackTestRequest request) {
+        return CompletableFuture.supplyAsync(() -> {
+            log.debug("Starting backtest on thread: {} with strategy containing {} entry and {} exit conditions",
                     Thread.currentThread().getName(),
                     request.getEntryConditions().size(),
                     request.getExitConditions().size());
@@ -107,22 +107,25 @@ public class BackTesterOrchestrationServiceImpl implements BackTesterOrchestrati
                 Strategy strategy = strategyService.buildStrategyFromRequest(request);
                 BackTestResult result = backTesterService.runBackTest(strategy, marketData, request);
 
-                log.info("Backtest completed with {} trades and total return of {}%",
+                log.debug("Backtest completed with {} trades and total return of {}%",
                         result.tradeCount(), String.format("%.2f", result.totalReturn()));
 
                 return result;
-            }
 
-        } catch (IOException e) {
-            log.error("CSV parsing error in backtest", e);
-            throw new BackTesterExceptions.InvalidRequestException("Invalid CSV format", e);
-        } catch (IllegalArgumentException e) {
-            log.error("Validation error in backtest", e);
-            throw new BackTesterExceptions.InvalidRequestException("Invalid request parameters", e);
-        } catch (Exception e) {
-            log.error("Unexpected error running individual backtest", e);
-            throw new BackTesterExceptions.BackTestOrchestrationException("Internal server error during backtest", e);
-        }
+            } catch (IOException e) {
+                log.error("CSV parsing error in backtest", e);
+                throw new CompletionException(
+                        new BackTesterExceptions.InvalidRequestException("Invalid CSV format", e));
+            } catch (IllegalArgumentException e) {
+                log.error("Validation error in backtest", e);
+                throw new CompletionException(
+                        new BackTesterExceptions.InvalidRequestException("Invalid request parameters", e));
+            } catch (Exception e) {
+                log.error("Unexpected error running individual backtest", e);
+                throw new CompletionException(
+                        new BackTesterExceptions.BackTestOrchestrationException("Internal server error during backtest", e));
+            }
+        }, backtestExecutor);
     }
 
     private void validateRequests(List<BackTestRequest> requests) {
@@ -131,15 +134,21 @@ public class BackTesterOrchestrationServiceImpl implements BackTesterOrchestrati
         }
     }
 
-    private Throwable getRootCause(Throwable throwable) {
+    private Throwable extractMeaningfulException(Throwable throwable) {
         Throwable current = throwable;
-        while (current.getCause() != null) {
+
+        while (current instanceof CompletionException && current.getCause() != null) {
+            current = current.getCause();
+        }
+
+        while (current != null) {
             if (current instanceof BackTesterExceptions.BackTestOrchestrationException ||
                     current instanceof BackTesterExceptions.InvalidRequestException) {
                 return current;
             }
             current = current.getCause();
         }
-        return current;
+
+        return throwable;
     }
 }

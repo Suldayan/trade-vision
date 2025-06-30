@@ -9,5 +9,4 @@ import java.util.concurrent.CompletableFuture;
 
 public interface BackTesterService {
     BackTestResult runBackTest(Strategy strategy, MarketData marketData, BackTestRequest request);
-    CompletableFuture<BackTestResult> runConcurrentBackTests(Strategy strategy, MarketData marketData, BackTestRequest request) throws InterruptedException;
 }

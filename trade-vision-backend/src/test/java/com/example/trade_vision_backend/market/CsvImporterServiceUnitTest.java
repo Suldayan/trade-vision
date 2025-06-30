@@ -11,6 +11,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
@@ -34,7 +35,7 @@ class CsvImporterServiceUnitTest {
     class CsvDataImportTests {
         @Test
         @DisplayName("Should successfully import valid CSV data")
-        void shouldImportValidCsvData() {
+        void shouldImportValidCsvData() throws IOException {
             String csvContent = """
                     timestamp,open,high,low,close,adjusted_close,volume,dividend_amount,split_coefficient
                     2023-01-01,100.0,105.0,95.0,102.0,102.0,1000,0.0,1.0
@@ -73,7 +74,7 @@ class CsvImporterServiceUnitTest {
 
         @Test
         @DisplayName("Should handle case-insensitive CSV headers")
-        void shouldHandleCaseInsensitiveHeaders() {
+        void shouldHandleCaseInsensitiveHeaders() throws IOException {
             String csvContent = """
                     Timestamp,Open,High,Low,Close,Adjusted_Close,Volume,Dividend_Amount,Split_Coefficient
                     2023-01-01,100.0,105.0,95.0,102.0,102.0,1000,0.0,1.0
@@ -92,7 +93,7 @@ class CsvImporterServiceUnitTest {
 
         @Test
         @DisplayName("Should skip empty lines in CSV")
-        void shouldSkipEmptyLines() {
+        void shouldSkipEmptyLines() throws IOException {
             String csvContent = """
                     timestamp,open,high,low,close,adjusted_close,volume,dividend_amount,split_coefficient
                     2023-01-01,100.0,105.0,95.0,102.0,102.0,1000,0.0,1.0
@@ -113,7 +114,7 @@ class CsvImporterServiceUnitTest {
     class DateFormatTests {
         @Test
         @DisplayName("Should parse various date formats correctly")
-        void shouldParseDifferentDateFormats() {
+        void shouldParseDifferentDateFormats() throws IOException {
             String csvContent = """
                     timestamp,open,high,low,close,adjusted_close,volume,dividend_amount,split_coefficient
                     2023-01-01,100.0,105.0,95.0,102.0,102.0,1000,0.0,1.0
@@ -141,7 +142,7 @@ class CsvImporterServiceUnitTest {
     class MissingColumnTests {
         @Test
         @DisplayName("Should use default values for missing optional columns")
-        void shouldUseDefaultValuesForMissingOptionalColumns() {
+        void shouldUseDefaultValuesForMissingOptionalColumns() throws IOException {
             String csvContent = """
                     timestamp,open,high,low,close
                     2023-01-01,100.0,105.0,95.0,102.0
@@ -181,7 +182,7 @@ class CsvImporterServiceUnitTest {
     class InvalidDataTests {
         @Test
         @DisplayName("Should skip rows with invalid number format")
-        void shouldSkipRowsWithInvalidNumberFormat() {
+        void shouldSkipRowsWithInvalidNumberFormat() throws IOException {
             String csvContent = """
                     timestamp,open,high,low,close,adjusted_close,volume,dividend_amount,split_coefficient
                     2023-01-01,100.0,105.0,95.0,102.0,102.0,1000,0.0,1.0
@@ -200,7 +201,7 @@ class CsvImporterServiceUnitTest {
 
         @Test
         @DisplayName("Should skip rows with data integrity violations")
-        void shouldSkipRowsWithDataIntegrityViolations() {
+        void shouldSkipRowsWithDataIntegrityViolations() throws IOException {
             String csvContent = """
                     timestamp,open,high,low,close,adjusted_close,volume,dividend_amount,split_coefficient
                     2023-01-01,100.0,105.0,95.0,102.0,102.0,1000,0.0,1.0
@@ -218,7 +219,7 @@ class CsvImporterServiceUnitTest {
 
         @Test
         @DisplayName("Should sort non-chronological dates")
-        void shouldSortNonChronologicalDates() {
+        void shouldSortNonChronologicalDates() throws IOException {
             String csvContent = """
                     timestamp,open,high,low,close,adjusted_close,volume,dividend_amount,split_coefficient
                     2023-01-02,102.0,110.0,100.0,108.0,108.0,2000,0.0,1.0
@@ -238,7 +239,7 @@ class CsvImporterServiceUnitTest {
 
         @Test
         @DisplayName("Should skip rows with negative volume")
-        void shouldSkipRowsWithNegativeVolume() {
+        void shouldSkipRowsWithNegativeVolume() throws IOException {
             String csvContent = """
                     timestamp,open,high,low,close,volume
                     2023-01-01,100.0,105.0,95.0,102.0,1000

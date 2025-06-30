@@ -6,7 +6,8 @@ import org.springframework.web.context.request.async.DeferredResult;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
 
 public interface BackTesterOrchestrationService {
-    DeferredResult<List<BackTestResult>> runOrchestration(MultipartFile file, List<BackTestRequest> requests);
+    CompletableFuture<List<BackTestResult>> runOrchestration(MultipartFile file, List<BackTestRequest> requests);
 }
