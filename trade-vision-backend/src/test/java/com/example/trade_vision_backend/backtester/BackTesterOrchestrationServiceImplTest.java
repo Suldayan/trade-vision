@@ -102,7 +102,7 @@ class BackTesterOrchestrationServiceImplTest {
             CompletableFuture<List<BackTestResult>> future = orchestrationService.runOrchestration(mockFile, validRequests);
 
             assertNotNull(future);
-            List<BackTestResult> results = future.get(); // Blocks until complete
+            List<BackTestResult> results = future.get();
             assertThat(results).hasSize(1).containsExactly(mockResult);
 
             verify(csvImporterService).importCsvFromStream(any(InputStream.class));
@@ -147,7 +147,6 @@ class BackTesterOrchestrationServiceImplTest {
     @DisplayName("Error Handling Tests")
     class ErrorHandlingTests {
 
-        // CORRECTED: Test now checks for a failed future instead of a synchronous exception.
         @Test
         @DisplayName("Should reject requests exceeding maximum limit by returning a failed future")
         void shouldRejectRequestsExceedingMaximumLimit() {
@@ -163,7 +162,6 @@ class BackTesterOrchestrationServiceImplTest {
             verifyNoInteractions(csvImporterService, strategyService, backTesterService, backtestExecutor);
         }
 
-        // CORRECTED: Test now checks for a failed future instead of a synchronous exception.
         @Test
         @DisplayName("Should handle null requests by returning a failed future")
         void shouldHandleNullRequests() {
@@ -190,7 +188,6 @@ class BackTesterOrchestrationServiceImplTest {
             verifyNoInteractions(csvImporterService, strategyService, backTesterService, backtestExecutor);
         }
 
-        // CORRECTED: Removed racy `isCompletedExceptionally` check.
         @Test
         @DisplayName("Should handle file reading IOException by completing future exceptionally")
         void shouldHandleFileReadingIOException() throws Exception {
@@ -205,7 +202,7 @@ class BackTesterOrchestrationServiceImplTest {
                     .hasCauseInstanceOf(BackTesterExceptions.InvalidRequestException.class)
                     .hasMessageContaining("Failed to process market data file");
 
-            verify(backtestExecutor).execute(any());
+            verify(backtestExecutor, times(2)).execute(any());
             verifyNoInteractions(csvImporterService, strategyService, backTesterService);
         }
 
@@ -245,7 +242,6 @@ class BackTesterOrchestrationServiceImplTest {
             verifyNoInteractions(backTesterService);
         }
 
-        // CORRECTED: Removed racy `isCompletedExceptionally` check.
         @Test
         @DisplayName("Should handle unexpected errors by completing future exceptionally")
         void shouldHandleUnexpectedErrors() throws Exception {
@@ -266,7 +262,6 @@ class BackTesterOrchestrationServiceImplTest {
             verify(backTesterService).runBackTest(eq(mockStrategy), eq(mockMarketData), any(BackTestRequest.class));
         }
 
-        // CORRECTED: Removed racy `isCompletedExceptionally` check.
         @Test
         @DisplayName("Should handle partial failures by completing the future exceptionally")
         void shouldHandlePartialFailures() throws Exception {
@@ -294,7 +289,7 @@ class BackTesterOrchestrationServiceImplTest {
         void shouldHandleTimeoutScenarios() throws Exception {
             setupSuccessfulMocks();
             when(backTesterService.runBackTest(any(), any(), any())).thenAnswer(invocation -> {
-                Thread.sleep(200); // Simulate delay
+                Thread.sleep(200);
                 return mockResult;
             });
             setupAsyncExecution();
@@ -328,20 +323,15 @@ class BackTesterOrchestrationServiceImplTest {
             setupSuccessfulMocks();
             setupSynchronousExecutor();
             ArgumentCaptor<InputStream> inputStreamCaptor = ArgumentCaptor.forClass(InputStream.class);
-            // Mock getInputStream() to ensure it's only called once.
             MultipartFile spyFile = spy(mockFile);
 
             orchestrationService.runOrchestration(spyFile, multipleRequests);
 
-            // Verify the file was physically read only ONCE.
             verify(spyFile, times(1)).getBytes();
-            // Verify the in-memory stream was passed to the importer multiple times.
             verify(csvImporterService, times(3)).importCsvFromStream(inputStreamCaptor.capture());
             assertThat(inputStreamCaptor.getAllValues()).allMatch(stream -> stream instanceof ByteArrayInputStream);
         }
     }
-
-    // ===== Helper Methods =====
 
     private void setupSuccessfulMocks() throws Exception {
         when(csvImporterService.importCsvFromStream(any(InputStream.class))).thenReturn(mockMarketData);
@@ -358,7 +348,6 @@ class BackTesterOrchestrationServiceImplTest {
     }
 
     private void setupAsyncExecution() {
-        // Use a real executor for more realistic async testing
         ExecutorService service = Executors.newSingleThreadExecutor();
         doAnswer(invocation -> {
             Runnable task = invocation.getArgument(0);

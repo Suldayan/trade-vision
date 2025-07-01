@@ -20,7 +20,7 @@ import java.util.concurrent.CompletableFuture;
 @Slf4j
 @Validated
 @RequiredArgsConstructor
-@RequestMapping("/backtest")
+@RequestMapping("/api/backtest")
 public class BackTesterController {
     private final BackTesterOrchestrationService orchestrationService;
 

@@ -10,10 +10,9 @@ import java.util.List;
 @RequestMapping("/api/strategies")
 @RequiredArgsConstructor
 public class StrategyController {
-
     private final StrategyManager strategyManager;
 
-    @GetMapping
+    @GetMapping("/all")
     public ResponseEntity<List<StrategyModel>> getAllStrategies() {
         List<StrategyModel> strategies = strategyManager.getAllStrategies();
         return ResponseEntity.ok(strategies);

@@ -97,6 +97,11 @@ public class BackTesterOrchestrationServiceImpl implements BackTesterOrchestrati
     @Nonnull
     private CompletableFuture<BackTestResult> runSingleBacktest(byte[] fileBytes, @Nonnull BackTestRequest request) {
         return CompletableFuture.supplyAsync(() -> {
+            if (fileBytes == null) {
+                throw new CompletionException(
+                        new BackTesterExceptions.InvalidRequestException("Failed to process market data file"));
+            }
+
             log.debug("Starting backtest on thread: {} with strategy containing {} entry and {} exit conditions",
                     Thread.currentThread().getName(),
                     request.getEntryConditions().size(),

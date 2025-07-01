@@ -88,7 +88,7 @@ public class BackTesterControllerTest {
                     requestsJson.getBytes()
             );
 
-            MvcResult mvcResult = mockMvc.perform(multipart("/backtest/execute")
+            MvcResult mvcResult = mockMvc.perform(multipart("/api/backtest/execute")
                             .file(csvFile)
                             .file(requestsPart))
                     .andExpect(request().asyncStarted())
@@ -119,7 +119,7 @@ public class BackTesterControllerTest {
         @Test
         @DisplayName("Should return health status")
         void shouldReturnHealthStatus() throws Exception {
-            mockMvc.perform(get("/backtest/health"))
+            mockMvc.perform(get("/api/backtest/health"))
                     .andDo(print())
                     .andExpect(status().isOk())
                     .andExpect(content().contentType(MediaType.APPLICATION_JSON))
@@ -135,7 +135,6 @@ public class BackTesterControllerTest {
         @Test
         @DisplayName("Should handle orchestration service failure")
         void shouldHandleOrchestrationServiceFailure() throws Exception {
-            // Given - service throws an exception
             CompletableFuture<List<BackTestResult>> failedFuture = new CompletableFuture<>();
             failedFuture.completeExceptionally(new RuntimeException("Processing failed"));
 
@@ -148,8 +147,7 @@ public class BackTesterControllerTest {
                     "request", "", "application/json", requestsJson.getBytes()
             );
 
-            // When & Then
-            MvcResult mvcResult = mockMvc.perform(multipart("/backtest/execute")
+            MvcResult mvcResult = mockMvc.perform(multipart("/api/backtest/execute")
                             .file(csvFile)
                             .file(requestsPart))
                     .andExpect(request().asyncStarted())
@@ -168,8 +166,8 @@ public class BackTesterControllerTest {
                     "request", "", "application/json", requestsJson.getBytes()
             );
 
-            mockMvc.perform(multipart("/backtest/execute")
-                            .file(requestsPart)) // Missing file part
+            mockMvc.perform(multipart("/api/backtest/execute")
+                            .file(requestsPart))
                     .andDo(print())
                     .andExpect(status().isBadRequest());
         }
@@ -179,8 +177,8 @@ public class BackTesterControllerTest {
         void shouldRejectRequestWithMissingRequestData() throws Exception {
             MockMultipartFile csvFile = createValidCsvFile();
 
-            mockMvc.perform(multipart("/backtest/execute")
-                            .file(csvFile)) // Missing request part
+            mockMvc.perform(multipart("/api/backtest/execute")
+                            .file(csvFile))
                     .andDo(print())
                     .andExpect(status().isBadRequest());
         }
@@ -193,7 +191,7 @@ public class BackTesterControllerTest {
                     "request", "", "application/json", "invalid json".getBytes()
             );
 
-            mockMvc.perform(multipart("/backtest/execute")
+            mockMvc.perform(multipart("/api/backtest/execute")
                             .file(csvFile)
                             .file(invalidRequestPart))
                     .andDo(print())
@@ -219,7 +217,7 @@ public class BackTesterControllerTest {
                     "request", "", "application/json", requestsJson.getBytes()
             );
 
-            MvcResult mvcResult = mockMvc.perform(multipart("/backtest/execute")
+            MvcResult mvcResult = mockMvc.perform(multipart("/api/backtest/execute")
                             .file(csvFile)
                             .file(requestsPart))
                     .andExpect(request().asyncStarted())
@@ -251,7 +249,7 @@ public class BackTesterControllerTest {
                     "request", "", "application/json", requestsJson.getBytes()
             );
 
-            MvcResult mvcResult = mockMvc.perform(multipart("/backtest/execute")
+            MvcResult mvcResult = mockMvc.perform(multipart("/api/backtest/execute")
                             .file(csvFile)
                             .file(requestsPart))
                     .andExpect(request().asyncStarted())
@@ -272,7 +270,6 @@ public class BackTesterControllerTest {
             given(backTesterOrchestrationService.runOrchestration(any(MultipartFile.class), any(List.class)))
                     .willReturn(expectedResults);
 
-            // Create file with .txt extension but CSV content
             String csvContent = """
                     Date,Open,High,Low,Close,Volume
                     2023-01-01,100.0,105.0,99.0,104.0,1000000""";
@@ -286,7 +283,7 @@ public class BackTesterControllerTest {
                     "request", "", "application/json", requestsJson.getBytes()
             );
 
-            MvcResult mvcResult = mockMvc.perform(multipart("/backtest/execute")
+            MvcResult mvcResult = mockMvc.perform(multipart("/api/backtest/execute")
                             .file(txtFile)
                             .file(requestsPart))
                     .andExpect(request().asyncStarted())
@@ -316,7 +313,7 @@ public class BackTesterControllerTest {
                     "request", "", "application/json", requestsJson.getBytes()
             );
 
-            MvcResult mvcResult = mockMvc.perform(multipart("/backtest/execute")
+            MvcResult mvcResult = mockMvc.perform(multipart("/api/backtest/execute")
                             .file(csvFile)
                             .file(requestsPart))
                     .andExpect(request().asyncStarted())

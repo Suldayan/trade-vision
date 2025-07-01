@@ -109,12 +109,7 @@ public class CsvImporterServiceImpl implements CsvImporterService {
                      .parse(bufferedReader)) {
 
             Map<String, Integer> headerMap = parser.getHeaderMap();
-
-            try {
-                validateHeaders(headerMap);
-            } catch (IllegalArgumentException e) {
-                throw new IOException("CSV validation failed: " + e.getMessage(), e);
-            }
+            validateHeaders(headerMap);
 
             for (CSVRecord record : parser) {
                 stats.processedRows++;
@@ -212,7 +207,7 @@ public class CsvImporterServiceImpl implements CsvImporterService {
 
             int totalDataPoints = allDataPoints.size();
             if (totalDataPoints == 0) {
-                throw new IOException("No valid market data points were found in the CSV file");
+                throw new IllegalArgumentException("No valid market data points were found in the CSV file");
             }
 
             log.info("Successfully loaded {} market data points for backtesting", totalDataPoints);
@@ -221,6 +216,9 @@ public class CsvImporterServiceImpl implements CsvImporterService {
         } catch (IOException e) {
             throw e;
         } catch (Exception e) {
+            if (e instanceof IllegalArgumentException) {
+                throw new IllegalArgumentException(e);
+            }
             throw new RuntimeException("Unexpected error during CSV import", e);
         }
     }
