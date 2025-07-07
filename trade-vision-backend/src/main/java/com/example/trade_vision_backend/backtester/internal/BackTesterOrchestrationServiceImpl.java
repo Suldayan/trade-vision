@@ -79,7 +79,9 @@ public class BackTesterOrchestrationServiceImpl implements BackTesterOrchestrati
     }
 
     @Nonnull
-    private CompletableFuture<List<BackTestResult>> runBacktests(byte[] fileBytes, @Nonnull List<BackTestRequest> requests) {
+    private CompletableFuture<List<BackTestResult>> runBacktests(
+            byte[] fileBytes,
+            @Nonnull List<BackTestRequest> requests) {
         List<CompletableFuture<BackTestResult>> backtestFutures = requests.stream()
                 .map(request -> runSingleBacktest(fileBytes, request))
                 .toList();
@@ -95,7 +97,9 @@ public class BackTesterOrchestrationServiceImpl implements BackTesterOrchestrati
     }
 
     @Nonnull
-    private CompletableFuture<BackTestResult> runSingleBacktest(byte[] fileBytes, @Nonnull BackTestRequest request) {
+    private CompletableFuture<BackTestResult> runSingleBacktest(
+            byte[] fileBytes,
+            @Nonnull BackTestRequest request) {
         return CompletableFuture.supplyAsync(() -> {
             if (fileBytes == null) {
                 throw new CompletionException(

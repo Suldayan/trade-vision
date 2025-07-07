@@ -4,6 +4,7 @@ import com.example.trade_vision_backend.market.MarketData;
 import com.example.trade_vision_backend.indicators.IndicatorUtils;
 import com.example.trade_vision_backend.strategies.Condition;
 import com.example.trade_vision_backend.strategies.internal.enums.Direction;
+import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -26,6 +27,30 @@ public class ROCCondition implements Condition {
             return false;
         }
 
+        return evaluateROC(rocValues, currentIndex);
+    }
+
+    @Override
+    public boolean[] evaluateVector(@Nonnull MarketData data) {
+        int length = data.close().length;
+        boolean[] signals = new boolean[length];
+
+        double[] rocValues = IndicatorUtils.roc(data.close(), period);
+
+        // Start from period index since we need enough data for ROC calculation
+        for (int i = period; i < length; i++) {
+            if (Double.isNaN(rocValues[i])) {
+                signals[i] = false;
+                continue;
+            }
+
+            signals[i] = evaluateROC(rocValues, i);
+        }
+
+        return signals;
+    }
+
+    private boolean evaluateROC(double[] rocValues, int currentIndex) {
         double currentROC = rocValues[currentIndex];
 
         // For crossing conditions, we need to check the previous value as well

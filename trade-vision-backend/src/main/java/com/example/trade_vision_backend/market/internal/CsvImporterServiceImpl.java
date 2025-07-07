@@ -26,18 +26,6 @@ import java.util.*;
 public class CsvImporterServiceImpl implements CsvImporterService {
     private final DataExtractor dataExtractor;
 
-    private static class Headers {
-        public static final String TIMESTAMP = "timestamp";
-        public static final String OPEN = "open";
-        public static final String HIGH = "high";
-        public static final String LOW = "low";
-        public static final String CLOSE = "close";
-        public static final String ADJUSTED_CLOSE = "adjusted_close";
-        public static final String VOLUME = "volume";
-        public static final String DIVIDEND_AMOUNT = "dividend_amount";
-        public static final String SPLIT_COEFFICIENT = "split_coefficient";
-    }
-
     private static final List<DateTimeFormatter> DATE_FORMATTERS = Arrays.asList(
             DateTimeFormatter.ofPattern("yyyy-MM-dd"),
             DateTimeFormatter.ofPattern("MM/dd/yyyy"),
@@ -51,6 +39,11 @@ public class CsvImporterServiceImpl implements CsvImporterService {
             DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss"),
             DateTimeFormatter.ISO_DATE_TIME
     );
+
+    // Format detection fields
+    private DateTimeFormatter detectedDateTimeFormatter = null;
+    private DateTimeFormatter detectedDateFormatter = null;
+    private boolean isDateOnly = false;
 
     private static class ImportStats {
         int processedRows = 0;
@@ -78,7 +71,7 @@ public class CsvImporterServiceImpl implements CsvImporterService {
             }
         }
 
-        void addError(int recordNumber, String message) {
+        void addError(int recordNumber, @Nonnull String message) {
             if (errors.size() < 20) {
                 errors.add(String.format("Line %d: %s", recordNumber, message));
             }
@@ -94,6 +87,11 @@ public class CsvImporterServiceImpl implements CsvImporterService {
         boolean orderDetermined = false;
         LocalDateTime firstTimestamp = null;
         LocalDateTime secondTimestamp = null;
+
+        // Reset format detection for each import
+        detectedDateTimeFormatter = null;
+        detectedDateFormatter = null;
+        isDateOnly = false;
 
         try (BufferedReader bufferedReader = new BufferedReader(
                 new InputStreamReader(BOMInputStream.builder()
@@ -113,83 +111,97 @@ public class CsvImporterServiceImpl implements CsvImporterService {
 
             for (CSVRecord record : parser) {
                 stats.processedRows++;
+
+                // Fast-path validation - check for obviously invalid records first
+                if (record.size() < 5) {
+                    stats.skippedRows++;
+                    continue;
+                }
+
+                LocalDateTime timestamp;
+                double open, high, low, close;
+
                 try {
-                    LocalDateTime timestamp;
-                    try {
-                        timestamp = parseTimestamp(record.get(Headers.TIMESTAMP));
-                    } catch (Exception e) {
-                        stats.invalidDateRows++;
-                        stats.addError((int) record.getRecordNumber(), "Invalid timestamp: " + e.getMessage());
+                    // Parse all required fields first - fail fast if any are invalid
+                    String timestampStr = record.get(Headers.TIMESTAMP);
+                    String openStr = record.get(Headers.OPEN);
+                    String highStr = record.get(Headers.HIGH);
+                    String lowStr = record.get(Headers.LOW);
+                    String closeStr = record.get(Headers.CLOSE);
+
+                    // Quick empty check
+                    if (timestampStr.isEmpty() || openStr.isEmpty() || highStr.isEmpty() ||
+                            lowStr.isEmpty() || closeStr.isEmpty()) {
                         stats.skippedRows++;
                         continue;
                     }
 
-                    if (firstTimestamp == null) {
-                        firstTimestamp = timestamp;
-                    } else if (secondTimestamp == null) {
-                        secondTimestamp = timestamp;
-                        if (secondTimestamp.isBefore(firstTimestamp)) {
-                            isReverseChronological = true;
-                            log.info("Detected reverse chronological data (newest first). Will sort automatically.");
-                        }
-                        orderDetermined = true;
-                    }
+                    // Parse timestamp
+                    timestamp = parseTimestamp(timestampStr);
 
-                    double open, high, low, close;
-                    try {
-                        open = parseDouble(record.get(Headers.OPEN));
-                        high = parseDouble(record.get(Headers.HIGH));
-                        low = parseDouble(record.get(Headers.LOW));
-                        close = parseDouble(record.get(Headers.CLOSE));
-                    } catch (NumberFormatException e) {
-                        stats.invalidNumberRows++;
-                        stats.addError((int) record.getRecordNumber(), "Invalid required numeric value: " + e.getMessage());
-                        stats.skippedRows++;
-                        continue;
-                    }
+                    // Parse numbers
+                    open = Double.parseDouble(openStr);
+                    high = Double.parseDouble(highStr);
+                    low = Double.parseDouble(lowStr);
+                    close = Double.parseDouble(closeStr);
 
+                    // Quick validation - only if parsing succeeded
                     if (high < low || open < low || open > high || close < low || close > high) {
                         stats.dataOutOfRangeRows++;
-                        stats.addError((int) record.getRecordNumber(),
-                                String.format("Price integrity check failed: OHLC values inconsistent (O: %.2f, H: %.2f, L: %.2f, C: %.2f)",
-                                        open, high, low, close));
                         stats.skippedRows++;
                         continue;
                     }
-
-                    double adjustedClose = safeParseDouble(record, Headers.ADJUSTED_CLOSE, close);
-                    long volume = safeParseLong(record);
-                    double dividendAmount = safeParseDouble(record, Headers.DIVIDEND_AMOUNT, 0.0);
-                    double splitCoefficient = safeParseDouble(record, Headers.SPLIT_COEFFICIENT, 1.0);
-
-                    if (volume < 0) {
-                        stats.dataOutOfRangeRows++;
-                        stats.addError((int) record.getRecordNumber(), "Volume cannot be negative: " + volume);
-                        stats.skippedRows++;
-                        continue;
-                    }
-
-                    // If we get here, the data point is valid
-                    MarketDataPoint dataPoint = MarketDataPoint.builder()
-                            .timestamp(timestamp)
-                            .open(open)
-                            .high(high)
-                            .low(low)
-                            .close(close)
-                            .adjustedClose(adjustedClose)
-                            .volume(volume)
-                            .dividendAmount(dividendAmount)
-                            .splitCoefficient(splitCoefficient)
-                            .build();
-
-                    allDataPoints.add(dataPoint);
 
                 } catch (Exception e) {
+                    // Handle all parsing failures in one place
+                    if (e instanceof DateTimeParseException) {
+                        stats.invalidDateRows++;
+                    } else if (e instanceof NumberFormatException) {
+                        stats.invalidNumberRows++;
+                    }
+                    stats.addError((int) record.getRecordNumber(), "Parsing failed: " + e.getMessage());
                     stats.skippedRows++;
-                    stats.addError((int) record.getRecordNumber(), "Unexpected error: " + e.getMessage());
-                    log.warn("Error processing record at line {}, skipping: {}",
-                            record.getRecordNumber(), e.getMessage());
+                    continue;
                 }
+
+                // Timestamp ordering detection
+                if (firstTimestamp == null) {
+                    firstTimestamp = timestamp;
+                } else if (secondTimestamp == null) {
+                    secondTimestamp = timestamp;
+                    if (secondTimestamp.isBefore(firstTimestamp)) {
+                        isReverseChronological = true;
+                        log.info("Detected reverse chronological data (newest first). Will sort automatically.");
+                    }
+                    orderDetermined = true;
+                }
+
+                // Parse optional fields - using simpler approach
+                double adjustedClose = safeParseDouble(record, Headers.ADJUSTED_CLOSE, close);
+                long volume = safeParseLong(record);
+                double dividendAmount = safeParseDouble(record, Headers.DIVIDEND_AMOUNT, 0.0);
+                double splitCoefficient = safeParseDouble(record, Headers.SPLIT_COEFFICIENT, 1.0);
+
+                if (volume < 0) {
+                    stats.dataOutOfRangeRows++;
+                    stats.skippedRows++;
+                    continue;
+                }
+
+                // Create data point
+                MarketDataPoint dataPoint = MarketDataPoint.builder()
+                        .timestamp(timestamp)
+                        .open(open)
+                        .high(high)
+                        .low(low)
+                        .close(close)
+                        .adjustedClose(adjustedClose)
+                        .volume(volume)
+                        .dividendAmount(dividendAmount)
+                        .splitCoefficient(splitCoefficient)
+                        .build();
+
+                allDataPoints.add(dataPoint);
             }
 
             if (!orderDetermined && !allDataPoints.isEmpty()) {
@@ -223,7 +235,7 @@ public class CsvImporterServiceImpl implements CsvImporterService {
         }
     }
 
-    private void validateHeaders(Map<String, Integer> headerMap) {
+    private void validateHeaders(@Nonnull Map<String, Integer> headerMap) {
         List<String> requiredHeaders = Arrays.asList(
                 Headers.TIMESTAMP,
                 Headers.OPEN,
@@ -292,25 +304,60 @@ public class CsvImporterServiceImpl implements CsvImporterService {
             throw new IllegalArgumentException("Timestamp cannot be empty");
         }
 
+        // If we haven't detected the format yet, try to detect it
+        if (detectedDateTimeFormatter == null && detectedDateFormatter == null) {
+            detectDateFormat(timestamp);
+        }
+
+        // Use the detected formatter
+        try {
+            if (isDateOnly) {
+                return LocalDate.parse(timestamp, detectedDateFormatter).atStartOfDay();
+            } else {
+                if (detectedDateTimeFormatter == null) {
+                    // The detectedDateTimeFormatter may be null, so we make a final check here before returning
+                    throw new IllegalArgumentException("Date time formatter has been passed as null");
+                }
+                return LocalDateTime.parse(timestamp, detectedDateTimeFormatter);
+            }
+        } catch (DateTimeParseException e) {
+            // Fallback only if detected format fails
+            return fallbackTimestampParse(timestamp);
+        }
+    }
+
+    private void detectDateFormat(@Nonnull String timestamp) {
         // Try datetime formats first
         for (DateTimeFormatter formatter : DATETIME_FORMATTERS) {
             try {
-                return LocalDateTime.parse(timestamp, formatter);
+                LocalDateTime.parse(timestamp, formatter);
+                detectedDateTimeFormatter = formatter;
+                isDateOnly = false;
+                log.debug("Detected datetime format: {}", formatter);
+                return;
             } catch (DateTimeParseException ignored) {
                 // Try next format
             }
         }
 
-        // Try date formats (convert to LocalDateTime)
+        // Try date formats
         for (DateTimeFormatter formatter : DATE_FORMATTERS) {
             try {
-                return LocalDate.parse(timestamp, formatter).atStartOfDay();
+                LocalDate.parse(timestamp, formatter);
+                detectedDateFormatter = formatter;
+                isDateOnly = true;
+                log.debug("Detected date format: {}", formatter);
+                return;
             } catch (DateTimeParseException ignored) {
                 // Try next format
             }
         }
 
-        // Fallback to the original approach
+        // If we get here, use fallback approach
+        log.warn("Could not detect date format, using fallback parsing");
+    }
+
+    private LocalDateTime fallbackTimestampParse(@Nonnull String timestamp) {
         try {
             if (timestamp.contains("T")) {
                 return LocalDateTime.parse(timestamp);

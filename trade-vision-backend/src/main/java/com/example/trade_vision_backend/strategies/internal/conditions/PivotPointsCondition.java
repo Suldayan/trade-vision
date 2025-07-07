@@ -5,6 +5,7 @@ import com.example.trade_vision_backend.market.MarketData;
 import com.example.trade_vision_backend.indicators.IndicatorUtils;
 import com.example.trade_vision_backend.strategies.Condition;
 import com.example.trade_vision_backend.strategies.internal.enums.PivotLevel;
+import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
 
 import java.util.Map;
@@ -63,7 +64,60 @@ public class PivotPointsCondition implements Condition {
             return previousPrice > previousPivotLevel && currentPrice < currentPivotLevel;
         }
     }
-    
+
+    @Override
+    public boolean[] evaluateVector(@Nonnull MarketData data) {
+        double[] high = data.high();
+        double[] low = data.low();
+        double[] close = data.close();
+        double[] open = data.open();
+        int length = close.length;
+
+        boolean[] signals = new boolean[length];
+
+        Map<String, double[]> pivotPoints = IndicatorUtils.pivotPoints(high, low, close, open, pivotType);
+        String pivotLevelKey = pivotLevel.name();
+
+        if (!pivotPoints.containsKey(pivotLevelKey)) {
+            throw new IllegalArgumentException("Invalid pivot level: " + pivotLevel);
+        }
+
+        double[] pivotLevelValues = pivotPoints.get(pivotLevelKey);
+
+        for (int i = 1; i < length; i++) {
+            if (Double.isNaN(pivotLevelValues[i]) || Double.isNaN(pivotLevelValues[i - 1])) {
+                signals[i] = false;
+                continue;
+            }
+
+            double currentPrice, previousPrice;
+
+            if (useClose) {
+                currentPrice = close[i];
+                previousPrice = close[i - 1];
+            } else {
+                if (crossAbove) {
+                    previousPrice = low[i - 1];
+                    currentPrice = high[i];
+                } else {
+                    previousPrice = high[i - 1];
+                    currentPrice = low[i];
+                }
+            }
+
+            double currentPivotLevel = pivotLevelValues[i];
+            double previousPivotLevel = pivotLevelValues[i - 1];
+
+            if (crossAbove) {
+                signals[i] = previousPrice < previousPivotLevel && currentPrice > currentPivotLevel;
+            } else {
+                signals[i] = previousPrice > previousPivotLevel && currentPrice < currentPivotLevel;
+            }
+        }
+
+        return signals;
+    }
+
     @Override
     public String toString() {
         String direction = crossAbove ? "crosses above" : "crosses below";

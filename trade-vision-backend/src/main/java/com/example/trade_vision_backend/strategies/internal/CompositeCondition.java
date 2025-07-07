@@ -2,9 +2,11 @@ package com.example.trade_vision_backend.strategies.internal;
 
 import com.example.trade_vision_backend.market.MarketData;
 import com.example.trade_vision_backend.strategies.Condition;
+import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 @RequiredArgsConstructor
@@ -33,7 +35,7 @@ public class CompositeCondition implements Condition {
     }
 
     @Override
-    public boolean evaluate(MarketData data, int currentIndex) {
+    public boolean evaluate(@Nonnull MarketData data, int currentIndex) {
         if (operator == LogicalOperator.NOT) {
             return !negatedCondition.evaluate(data, currentIndex);
         }
@@ -44,5 +46,55 @@ public class CompositeCondition implements Condition {
             return conditions.stream().allMatch(c -> c.evaluate(data, currentIndex));
         }
         return conditions.stream().anyMatch(c -> c.evaluate(data, currentIndex));
+    }
+
+    @Override
+    public boolean[] evaluateVector(@Nonnull MarketData data) {
+        int dataSize = data.close().length;
+        boolean[] result = new boolean[dataSize];
+
+        if (operator == LogicalOperator.NOT) {
+            if (negatedCondition == null) {
+                // If no condition to negate, return all false
+                return result;
+            }
+            boolean[] childResult = negatedCondition.evaluateVector(data);
+            for (int i = 0; i < dataSize; i++) {
+                result[i] = !childResult[i];
+            }
+            return result;
+        }
+
+        if (conditions.isEmpty()) {
+            // Empty AND is true, empty OR is false
+            boolean defaultValue = operator == LogicalOperator.AND;
+            Arrays.fill(result, defaultValue);
+            return result;
+        }
+
+        if (operator == LogicalOperator.AND) {
+            // Initialize result to all true for AND operation
+            Arrays.fill(result, true);
+
+            // AND all conditions together
+            for (Condition condition : conditions) {
+                boolean[] conditionResult = condition.evaluateVector(data);
+                for (int i = 0; i < dataSize; i++) {
+                    result[i] = result[i] && conditionResult[i];
+                }
+            }
+            return result;
+        }
+
+        // OR all conditions together
+        for (Condition condition : conditions) {
+            boolean[] conditionResult = condition.evaluateVector(data);
+            for (int i = 0; i < dataSize; i++) {
+                result[i] = result[i] || conditionResult[i];
+                // Early termination: if already true, skip remaining conditions for this index
+            }
+        }
+
+        return result;
     }
 }

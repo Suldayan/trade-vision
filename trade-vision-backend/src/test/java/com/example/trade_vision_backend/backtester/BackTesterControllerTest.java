@@ -62,7 +62,7 @@ public class BackTesterControllerTest {
                 .winRatio(0.6)
                 .maxDrawdown(0.05)
                 .trades(Collections.emptyList())
-                .equityCurve(Collections.emptyList())
+                .equityCurve(new double[0])
                 .build();
     }
 
@@ -347,15 +347,6 @@ public class BackTesterControllerTest {
                 "test-data.csv",
                 "text/csv",
                 csvContent.getBytes()
-        );
-    }
-
-    private MockMultipartFile createInvalidFile() {
-        return new MockMultipartFile(
-                "file",
-                "test-data.txt",
-                "text/plain",
-                "invalid content".getBytes()
         );
     }
 

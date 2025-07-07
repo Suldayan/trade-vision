@@ -83,7 +83,7 @@ class BackTesterServiceImplTest {
 
         assertNotNull(result);
         assertFalse(result.trades().isEmpty(), "Should have executed at least one trade");
-        assertEquals(result.equityCurve().size(), marketData.getDataPoints().size(), "Equity curve should match data length + initial point");
+        assertEquals(result.equityCurve().length, marketData.getDataPoints().size(), "Equity curve should match data length + initial point");
     }
 
     @Test
@@ -96,7 +96,7 @@ class BackTesterServiceImplTest {
 
         assertNotNull(result);
         assertFalse(result.trades().isEmpty(), "Complex strategy should generate trades");
-        assertEquals(marketData.getDataPoints().size(), result.equityCurve().size(),
+        assertEquals(marketData.getDataPoints().size(), result.equityCurve().length,
                 "Equity curve should have one more point than price data (for initial capital)");
 
         assertTrue(result.totalReturn() != 0, "Should have calculated total return");
@@ -128,7 +128,7 @@ class BackTesterServiceImplTest {
 
         assertNotNull(result);
         assertEquals(0, result.trades().size(), "Should not have any trades");
-        assertEquals(marketData.getDataPoints().size(), result.equityCurve().size(), "Should still have full equity curve");
+        assertEquals(marketData.getDataPoints().size(), result.equityCurve().length, "Should still have full equity curve");
         assertEquals(10000, result.finalCapital(), "Final capital should equal initial capital");
         assertEquals(0, result.totalReturn(), "Total return should be 0%");
     }
@@ -170,15 +170,15 @@ class BackTesterServiceImplTest {
         assertTrue(result.totalReturn() > 0, "Should have positive returns");
         assertTrue(result.finalCapital() > 10000, "Final capital should be more than initial");
 
-        double previousEquity = result.equityCurve().getFirst();
+        double previousEquity = result.equityCurve()[0];
         boolean hasIncrease = false;
 
-        for (int i = 1; i < result.equityCurve().size(); i++) {
-            if (result.equityCurve().get(i) > previousEquity) {
+        for (int i = 1; i < result.equityCurve().length; i++) {
+            if (result.equityCurve()[i] > previousEquity) {
                 hasIncrease = true;
                 break;
             }
-            previousEquity = result.equityCurve().get(i);
+            previousEquity = result.equityCurve()[i];
         }
 
         assertTrue(hasIncrease, "Equity curve should show some increase with profitable strategy");
@@ -392,13 +392,27 @@ class BackTesterServiceImplTest {
         Strategy strategy = new Strategy();
 
         Condition entryCondition = Mockito.mock(Condition.class);
-        when(entryCondition.evaluate(any(MarketData.class), anyInt())).thenReturn(true);
+        // Mock both evaluate and evaluateVector methods
+        when(entryCondition.evaluateVector(any(MarketData.class))).thenAnswer(inv -> {
+            MarketData data = inv.getArgument(0);
+            int length = data.close().length;
+            boolean[] signals = new boolean[length];
+            Arrays.fill(signals, true); // All entry signals are true
+            return signals;
+        });
         strategy.addEntryCondition(entryCondition);
 
         Condition exitCondition = Mockito.mock(Condition.class);
-        when(exitCondition.evaluate(any(MarketData.class), anyInt())).thenAnswer(inv -> {
-            int index = inv.getArgument(1);
-            return index > 5 && index % 5 == 0;
+
+        // Mock vectorized evaluation
+        when(exitCondition.evaluateVector(any(MarketData.class))).thenAnswer(inv -> {
+            MarketData data = inv.getArgument(0);
+            int length = data.close().length;
+            boolean[] signals = new boolean[length];
+            for (int i = 0; i < length; i++) {
+                signals[i] = i > 5 && i % 5 == 0;
+            }
+            return signals;
         });
         strategy.addExitCondition(exitCondition);
 
@@ -412,19 +426,30 @@ class BackTesterServiceImplTest {
         Strategy strategy = new Strategy();
 
         Condition complexEntryCondition = Mockito.mock(Condition.class);
-        when(complexEntryCondition.evaluate(any(MarketData.class), anyInt())).thenAnswer(inv -> {
-            int index = inv.getArgument(1);
+
+        // Mock vectorized evaluation
+        when(complexEntryCondition.evaluateVector(any(MarketData.class))).thenAnswer(inv -> {
             MarketData data = inv.getArgument(0);
-            double price = data.close()[index];
-            return price > 11 && (index % 3 == 0);
+            double[] prices = data.close();
+            int length = prices.length;
+            boolean[] signals = new boolean[length];
+            for (int i = 0; i < length; i++) {
+                signals[i] = prices[i] > 11 && (i % 3 == 0);
+            }
+            return signals;
         });
 
         Condition complexExitCondition = Mockito.mock(Condition.class);
-        when(complexExitCondition.evaluate(any(MarketData.class), anyInt())).thenAnswer(inv -> {
-            int index = inv.getArgument(1);
+        // Mock vectorized evaluation
+        when(complexExitCondition.evaluateVector(any(MarketData.class))).thenAnswer(inv -> {
             MarketData data = inv.getArgument(0);
-            double price = data.close()[index];
-            return price < 11 || (price > 12.5 && index % 2 == 0);
+            double[] prices = data.close();
+            int length = prices.length;
+            boolean[] signals = new boolean[length];
+            for (int i = 0; i < length; i++) {
+                signals[i] = prices[i] < 11 || (prices[i] > 12.5 && i % 2 == 0);
+            }
+            return signals;
         });
 
         strategy.addEntryCondition(complexEntryCondition);
@@ -442,6 +467,25 @@ class BackTesterServiceImplTest {
             double price = data.close()[currentIndex];
             return checkAbove ? price > threshold : price < threshold;
         }
+
+        @Override
+        public boolean[] evaluateVector(MarketData data) {
+            double[] prices = data.close();
+            int length = prices.length;
+            boolean[] signals = new boolean[length];
+
+            if (checkAbove) {
+                for (int i = 0; i < length; i++) {
+                    signals[i] = prices[i] > threshold;
+                }
+            } else {
+                for (int i = 0; i < length; i++) {
+                    signals[i] = prices[i] < threshold;
+                }
+            }
+
+            return signals;
+        }
     }
 
     private record VolumeCondition(double threshold) implements Condition {
@@ -449,6 +493,112 @@ class BackTesterServiceImplTest {
         @Override
         public boolean evaluate(MarketData data, int currentIndex) {
             return data.volume()[currentIndex] > threshold;
+        }
+
+        @Override
+        public boolean[] evaluateVector(MarketData data) {
+            double[] volumes = data.volume();
+            int length = volumes.length;
+            boolean[] signals = new boolean[length];
+
+            for (int i = 0; i < length; i++) {
+                signals[i] = volumes[i] > threshold;
+            }
+
+            return signals;
+        }
+    }
+
+    // Example test method showing how to use the vectorized approach
+    @Test
+    public void testVectorizedStrategyProcessing() {
+        // Create test data
+        MarketData marketData = createTestMarketData();
+
+        // Create strategy with vectorized conditions
+        Strategy strategy = new Strategy();
+        strategy.addEntryCondition(new TestCondition(10.0, true));
+        strategy.addExitCondition(new VolumeCondition(1000.0));
+
+        // Use vectorized processing instead of loops
+        boolean[] entrySignals = strategy.calculateEntrySignals(marketData);
+        boolean[] exitSignals = strategy.calculateExitSignals(marketData);
+
+        // Verify signals
+        assertNotNull(entrySignals);
+        assertNotNull(exitSignals);
+        assertEquals(marketData.close().length, entrySignals.length);
+        assertEquals(marketData.close().length, exitSignals.length);
+
+        // Test specific signal conditions
+        for (int i = 0; i < entrySignals.length; i++) {
+            boolean expectedEntry = marketData.close()[i] > 10.0;
+            assertEquals(expectedEntry, entrySignals[i], "Entry signal mismatch at index " + i);
+
+            boolean expectedExit = marketData.volume()[i] > 1000.0;
+            assertEquals(expectedExit, exitSignals[i], "Exit signal mismatch at index " + i);
+        }
+    }
+
+    // Helper method to create test market data
+    private MarketData createTestMarketData() {
+        // Create sample data for testing
+        double[] closes = {9.0, 10.5, 11.2, 8.9, 12.1, 10.8, 13.5, 9.2, 11.9, 12.8};
+        double[] volumes = {800, 1200, 950, 1100, 1500, 900, 1800, 700, 1300, 1600};
+        double[] highs = new double[closes.length];
+        double[] lows = new double[closes.length];
+        double[] opens = new double[closes.length];
+
+        // Simple high/low/open generation for testing
+        for (int i = 0; i < closes.length; i++) {
+            highs[i] = closes[i] + 0.5;
+            lows[i] = closes[i] - 0.5;
+            opens[i] = i > 0 ? closes[i-1] : closes[i] - 0.2; // Open is previous close or slightly below first close
+        }
+
+        MarketData marketData = new MarketData();
+        LocalDateTime baseTime = LocalDateTime.now().minusDays(closes.length);
+
+        // Create MarketDataPoint objects and add them to MarketData
+        for (int i = 0; i < closes.length; i++) {
+            MarketDataPoint point = MarketDataPoint.builder()
+                    .timestamp(baseTime.plusDays(i))
+                    .open(opens[i])
+                    .high(highs[i])
+                    .low(lows[i])
+                    .close(closes[i])
+                    .adjustedClose(closes[i]) // Assuming no adjustments for test data
+                    .volume((long) volumes[i])
+                    .dividendAmount(0.0) // No dividends for test data
+                    .splitCoefficient(1.0) // No splits for test data
+                    .build();
+
+            marketData.addDataPoint(point);
+        }
+
+        return marketData;
+    }
+
+    // Test to verify backward compatibility
+    @Test
+    public void testBackwardCompatibilityWithIndividualEvaluation() {
+        MarketData marketData = createTestMarketData();
+        Strategy strategy = new Strategy();
+        TestCondition condition = new TestCondition(10.0, true);
+        strategy.addEntryCondition(condition);
+
+        // Test individual evaluation still works
+        for (int i = 0; i < marketData.close().length; i++) {
+            boolean individualResult = condition.evaluate(marketData, i);
+            boolean expectedResult = marketData.close()[i] > 10.0;
+            assertEquals(expectedResult, individualResult, "Individual evaluation failed at index " + i);
+        }
+
+        // Test vectorized evaluation produces same results
+        boolean[] vectorResults = condition.evaluateVector(marketData);
+        for (int i = 0; i < marketData.close().length; i++) {
+            boolean individualResult = condition.evaluate(marketData, i);
+            assertEquals(individualResult, vectorResults[i], "Vectorized vs individual mismatch at index " + i);
         }
     }
 }

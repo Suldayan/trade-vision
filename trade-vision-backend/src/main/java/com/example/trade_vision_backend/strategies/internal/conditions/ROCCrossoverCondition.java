@@ -2,6 +2,7 @@ package com.example.trade_vision_backend.strategies.internal.conditions;
 
 import com.example.trade_vision_backend.market.MarketData;
 import com.example.trade_vision_backend.strategies.Condition;
+import jakarta.annotation.Nonnull;
 import lombok.RequiredArgsConstructor;
 
 @RequiredArgsConstructor
@@ -11,7 +12,7 @@ public class ROCCrossoverCondition implements Condition {
     private final boolean crossAbove;
 
     @Override
-    public boolean evaluate(MarketData data, int currentIndex) {
+    public boolean evaluate(@Nonnull MarketData data, int currentIndex) {
         if (currentIndex <= period) {
             return false;
         }
@@ -21,6 +22,33 @@ public class ROCCrossoverCondition implements Condition {
         double currentROC = calculateROC(prices, currentIndex, period);
         double previousROC = calculateROC(prices, currentIndex - 1, period);
 
+        return evaluateCrossover(currentROC, previousROC);
+    }
+
+    @Override
+    public boolean[] evaluateVector(@Nonnull MarketData data) {
+        int length = data.close().length;
+        boolean[] signals = new boolean[length];
+        double[] prices = data.close();
+
+        double[] rocValues = new double[length];
+
+        for (int i = period; i < length; i++) {
+            rocValues[i] = calculateROC(prices, i, period);
+        }
+
+        // Start from period + 1 since we need both current and previous ROC values
+        for (int i = period + 1; i < length; i++) {
+            double currentROC = rocValues[i];
+            double previousROC = rocValues[i - 1];
+
+            signals[i] = evaluateCrossover(currentROC, previousROC);
+        }
+
+        return signals;
+    }
+
+    private boolean evaluateCrossover(double currentROC, double previousROC) {
         if (crossAbove) {
             return currentROC > threshold && previousROC <= threshold;
         } else {

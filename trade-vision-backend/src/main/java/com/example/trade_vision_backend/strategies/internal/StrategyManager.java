@@ -18,70 +18,101 @@ public class StrategyManager {
     public List<StrategyModel> getAllStrategies() {
         List<StrategyModel> strategies = new ArrayList<>();
 
-        // RSI_THRESHOLD
-        Map<String, StrategyModel.ParameterDefinition> rsiParams = new HashMap<>();
-        rsiParams.put("period", new StrategyModel.ParameterDefinition("number", 14, "Period"));
-        rsiParams.put("upperThreshold", new StrategyModel.ParameterDefinition("number", 70, "Upper Threshold"));
-        rsiParams.put("lowerThreshold", new StrategyModel.ParameterDefinition("number", 30, "Lower Threshold"));
-        rsiParams.put("checkOverbought", new StrategyModel.ParameterDefinition("boolean", false, "Check Overbought"));
+        strategies.add(createRsiThresholdStrategy());
+        strategies.add(createSmaStrategy());
+        strategies.add(createMacdStrategy());
+        strategies.add(createBollingerBandsStrategy());
+        strategies.add(createAtrStrategy());
+        strategies.add(createStochasticStrategy());
+        strategies.add(createDmiStrategy());
+        strategies.add(createIchimokuStrategy());
+        strategies.add(createObvStrategy());
+        strategies.add(createPivotPointsStrategy());
+        strategies.add(createRocStrategy());
+        strategies.add(createRocCrossoverStrategy());
+        strategies.add(createRocDivergenceStrategy());
+        strategies.add(createFibonacciStrategy());
 
-        strategies.add(new StrategyModel("RSI_THRESHOLD", "RSI Threshold",
-                "Triggers when RSI crosses above or below specified threshold levels", rsiParams));
+        return strategies;
+    }
 
-        // SMA_CROSSOVER
-        Map<String, StrategyModel.ParameterDefinition> smaParams = new HashMap<>();
-        smaParams.put("fastPeriod", new StrategyModel.ParameterDefinition("number", 5, "Fast Period"));
-        smaParams.put("slowPeriod", new StrategyModel.ParameterDefinition("number", 20, "Slow Period"));
-        smaParams.put("crossAbove", new StrategyModel.ParameterDefinition("boolean", true, "Cross Above"));
+    @Nonnull
+    private StrategyModel createRsiThresholdStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
+        params.put("period", new StrategyModel.ParameterDefinition("number", 14, "Period"));
+        params.put("upperThreshold", new StrategyModel.ParameterDefinition("number", 70, "Upper Threshold"));
+        params.put("lowerThreshold", new StrategyModel.ParameterDefinition("number", 30, "Lower Threshold"));
+        params.put("checkOverbought", new StrategyModel.ParameterDefinition("boolean", false, "Check Overbought"));
 
-        strategies.add(new StrategyModel("SMA_CROSSOVER", "SMA Crossover",
-                "Signals when fast moving average crosses above or below slow moving average", smaParams));
+        return new StrategyModel("RSI_THRESHOLD", "RSI Threshold",
+                "Triggers when RSI crosses above or below specified threshold levels", params);
+    }
 
-        // MACD_CROSSOVER
-        Map<String, StrategyModel.ParameterDefinition> macdParams = new HashMap<>();
-        macdParams.put("fastPeriod", new StrategyModel.ParameterDefinition("number", 12, "Fast Period"));
-        macdParams.put("slowPeriod", new StrategyModel.ParameterDefinition("number", 26, "Slow Period"));
-        macdParams.put("signalPeriod", new StrategyModel.ParameterDefinition("number", 9, "Signal Period"));
-        macdParams.put("crossAbove", new StrategyModel.ParameterDefinition("boolean", true, "Cross Above"));
+    @Nonnull
+    private StrategyModel createSmaStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
+        params.put("fastPeriod", new StrategyModel.ParameterDefinition("number", 5, "Fast Period"));
+        params.put("slowPeriod", new StrategyModel.ParameterDefinition("number", 20, "Slow Period"));
+        params.put("crossAbove", new StrategyModel.ParameterDefinition("boolean", true, "Cross Above"));
 
-        strategies.add(new StrategyModel("MACD_CROSSOVER", "MACD Crossover",
-                "Detects when MACD line crosses above or below the signal line", macdParams));
+        return new StrategyModel("SMA_CROSSOVER", "SMA Crossover",
+                "Signals when fast moving average crosses above or below slow moving average", params);
+    }
 
-        // BOLLINGER_BANDS
-        Map<String, StrategyModel.ParameterDefinition> bbParams = new HashMap<>();
-        bbParams.put("period", new StrategyModel.ParameterDefinition("number", 20, "Period"));
-        bbParams.put("numStd", new StrategyModel.ParameterDefinition("number", 2.0, "Standard Deviations", 0.1));
-        bbParams.put("checkUpper", new StrategyModel.ParameterDefinition("boolean", false, "Check Upper Band"));
+    @Nonnull
+    private StrategyModel createMacdStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
+        params.put("fastPeriod", new StrategyModel.ParameterDefinition("number", 12, "Fast Period"));
+        params.put("slowPeriod", new StrategyModel.ParameterDefinition("number", 26, "Slow Period"));
+        params.put("signalPeriod", new StrategyModel.ParameterDefinition("number", 9, "Signal Period"));
+        params.put("crossAbove", new StrategyModel.ParameterDefinition("boolean", true, "Cross Above"));
 
-        strategies.add(new StrategyModel("BOLLINGER_BANDS", "Bollinger Bands",
-                "Triggers when price touches or crosses Bollinger Band boundaries", bbParams));
+        return new StrategyModel("MACD_CROSSOVER", "MACD Crossover",
+                "Detects when MACD line crosses above or below the signal line", params);
+    }
 
-        // ATR
-        Map<String, StrategyModel.ParameterDefinition> atrParams = new HashMap<>();
-        atrParams.put("period", new StrategyModel.ParameterDefinition("number", 14, "Period"));
-        atrParams.put("multiplier", new StrategyModel.ParameterDefinition("number", 1.5, "Multiplier", 0.1));
-        atrParams.put("isAbove", new StrategyModel.ParameterDefinition("boolean", true, "Above Threshold"));
-        atrParams.put("compareWithPrice", new StrategyModel.ParameterDefinition("boolean", true, "Compare with Price Movement"));
+    @Nonnull
+    private StrategyModel createBollingerBandsStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
+        params.put("period", new StrategyModel.ParameterDefinition("number", 20, "Period"));
+        params.put("numStd", new StrategyModel.ParameterDefinition("number", 2.0, "Standard Deviations", 0.1));
+        params.put("checkUpper", new StrategyModel.ParameterDefinition("boolean", false, "Check Upper Band"));
 
-        strategies.add(new StrategyModel("ATR", "ATR Condition",
-                "Measures volatility using Average True Range for trend strength", atrParams));
+        return new StrategyModel("BOLLINGER_BANDS", "Bollinger Bands",
+                "Triggers when price touches or crosses Bollinger Band boundaries", params);
+    }
 
-        // STOCHASTIC
-        Map<String, StrategyModel.ParameterDefinition> stochParams = new HashMap<>();
-        stochParams.put("kPeriod", new StrategyModel.ParameterDefinition("number", 14, "K Period"));
-        stochParams.put("dPeriod", new StrategyModel.ParameterDefinition("number", 3, "D Period"));
-        stochParams.put("upperThreshold", new StrategyModel.ParameterDefinition("number", 80, "Upper Threshold"));
-        stochParams.put("lowerThreshold", new StrategyModel.ParameterDefinition("number", 20, "Lower Threshold"));
-        stochParams.put("checkOverbought", new StrategyModel.ParameterDefinition("boolean", false, "Check Overbought"));
+    @Nonnull
+    private StrategyModel createAtrStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
+        params.put("period", new StrategyModel.ParameterDefinition("number", 14, "Period"));
+        params.put("multiplier", new StrategyModel.ParameterDefinition("number", 1.5, "Multiplier", 0.1));
+        params.put("isAbove", new StrategyModel.ParameterDefinition("boolean", true, "Above Threshold"));
+        params.put("compareWithPrice", new StrategyModel.ParameterDefinition("boolean", true, "Compare with Price Movement"));
 
-        strategies.add(new StrategyModel("STOCHASTIC", "Stochastic Oscillator",
-                "Identifies overbought/oversold conditions using momentum oscillator", stochParams));
+        return new StrategyModel("ATR", "ATR Condition",
+                "Measures volatility using Average True Range for trend strength", params);
+    }
 
-        // DMI
-        Map<String, StrategyModel.ParameterDefinition> dmiParams = new HashMap<>();
-        dmiParams.put("period", new StrategyModel.ParameterDefinition("number", 14, "Period"));
+    @Nonnull
+    private StrategyModel createStochasticStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
+        params.put("kPeriod", new StrategyModel.ParameterDefinition("number", 14, "K Period"));
+        params.put("dPeriod", new StrategyModel.ParameterDefinition("number", 3, "D Period"));
+        params.put("upperThreshold", new StrategyModel.ParameterDefinition("number", 80, "Upper Threshold"));
+        params.put("lowerThreshold", new StrategyModel.ParameterDefinition("number", 20, "Lower Threshold"));
+        params.put("checkOverbought", new StrategyModel.ParameterDefinition("boolean", false, "Check Overbought"));
 
-        List<StrategyModel.ParameterOption> dmiOptions = Arrays.asList(
+        return new StrategyModel("STOCHASTIC", "Stochastic Oscillator",
+                "Identifies overbought/oversold conditions using momentum oscillator", params);
+    }
+
+    @Nonnull
+    private StrategyModel createDmiStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
+        params.put("period", new StrategyModel.ParameterDefinition("number", 14, "Period"));
+
+        List<StrategyModel.ParameterOption> options = Arrays.asList(
                 new StrategyModel.ParameterOption("PLUS_DI_ABOVE_MINUS_DI", "+DI Above -DI"),
                 new StrategyModel.ParameterOption("MINUS_DI_ABOVE_PLUS_DI", "-DI Above +DI"),
                 new StrategyModel.ParameterOption("PLUS_DI_CROSSES_ABOVE_MINUS_DI", "+DI Crosses Above -DI"),
@@ -96,20 +127,22 @@ public class StrategyManager {
                 new StrategyModel.ParameterOption("WEAK_TREND", "Weak Trend"),
                 new StrategyModel.ParameterOption("DI_DIVERGENCE", "DI Divergence")
         );
-        dmiParams.put("signalType", new StrategyModel.ParameterDefinition("string", "PLUS_DI_ABOVE_MINUS_DI", "Signal Type", dmiOptions));
-        dmiParams.put("threshold", new StrategyModel.ParameterDefinition("number", 25.0, "ADX Threshold", 0.1));
-        dmiParams.put("divergenceThreshold", new StrategyModel.ParameterDefinition("number", 10.0, "Divergence Threshold", 0.1));
+        params.put("signalType", new StrategyModel.ParameterDefinition("string", "PLUS_DI_ABOVE_MINUS_DI", "Signal Type", options));
+        params.put("threshold", new StrategyModel.ParameterDefinition("number", 25.0, "ADX Threshold", 0.1));
+        params.put("divergenceThreshold", new StrategyModel.ParameterDefinition("number", 10.0, "Divergence Threshold", 0.1));
 
-        strategies.add(new StrategyModel("DMI", "DMI/ADX Condition",
-                "Analyzes trend strength and direction using Directional Movement Index", dmiParams));
+        return new StrategyModel("DMI", "DMI/ADX Condition",
+                "Analyzes trend strength and direction using Directional Movement Index", params);
+    }
 
-        // ICHIMOKU_CLOUD
-        Map<String, StrategyModel.ParameterDefinition> ichimokuParams = new HashMap<>();
-        ichimokuParams.put("tenkanPeriod", new StrategyModel.ParameterDefinition("number", 9, "Tenkan Period"));
-        ichimokuParams.put("kijunPeriod", new StrategyModel.ParameterDefinition("number", 26, "Kijun Period"));
-        ichimokuParams.put("chikouPeriod", new StrategyModel.ParameterDefinition("number", 52, "Chikou Period"));
+    @Nonnull
+    private StrategyModel createIchimokuStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
+        params.put("tenkanPeriod", new StrategyModel.ParameterDefinition("number", 9, "Tenkan Period"));
+        params.put("kijunPeriod", new StrategyModel.ParameterDefinition("number", 26, "Kijun Period"));
+        params.put("chikouPeriod", new StrategyModel.ParameterDefinition("number", 52, "Chikou Period"));
 
-        List<StrategyModel.ParameterOption> ichimokuOptions = Arrays.asList(
+        List<StrategyModel.ParameterOption> options = Arrays.asList(
                 new StrategyModel.ParameterOption("TENKAN_CROSSES_ABOVE_KIJUN", "Tenkan Crosses Above Kijun"),
                 new StrategyModel.ParameterOption("TENKAN_CROSSES_BELOW_KIJUN", "Tenkan Crosses Below Kijun"),
                 new StrategyModel.ParameterOption("PRICE_ABOVE_CLOUD", "Price Above Cloud"),
@@ -122,16 +155,18 @@ public class StrategyManager {
                 new StrategyModel.ParameterOption("STRONG_BULLISH", "Strong Bullish"),
                 new StrategyModel.ParameterOption("STRONG_BEARISH", "Strong Bearish")
         );
-        ichimokuParams.put("signalType", new StrategyModel.ParameterDefinition("string", "PRICE_ABOVE_CLOUD", "Signal Type", ichimokuOptions));
+        params.put("signalType", new StrategyModel.ParameterDefinition("string", "PRICE_ABOVE_CLOUD", "Signal Type", options));
 
-        strategies.add(new StrategyModel("ICHIMOKU_CLOUD", "Ichimoku Cloud",
-                "Comprehensive trend analysis using multiple Ichimoku components", ichimokuParams));
+        return new StrategyModel("ICHIMOKU_CLOUD", "Ichimoku Cloud",
+                "Comprehensive trend analysis using multiple Ichimoku components", params);
+    }
 
-        // OBV
-        Map<String, StrategyModel.ParameterDefinition> obvParams = new HashMap<>();
-        obvParams.put("period", new StrategyModel.ParameterDefinition("number", 20, "Period"));
+    @Nonnull
+    private StrategyModel createObvStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
+        params.put("period", new StrategyModel.ParameterDefinition("number", 20, "Period"));
 
-        List<StrategyModel.ParameterOption> obvOptions = Arrays.asList(
+        List<StrategyModel.ParameterOption> options = Arrays.asList(
                 new StrategyModel.ParameterOption("ABOVE_MA", "Above Moving Average"),
                 new StrategyModel.ParameterOption("BELOW_MA", "Below Moving Average"),
                 new StrategyModel.ParameterOption("CROSS_ABOVE_MA", "Cross Above Moving Average"),
@@ -139,24 +174,26 @@ public class StrategyManager {
                 new StrategyModel.ParameterOption("INCREASING", "Increasing"),
                 new StrategyModel.ParameterOption("DECREASING", "Decreasing")
         );
-        obvParams.put("conditionType", new StrategyModel.ParameterDefinition("string", "ABOVE_MA", "Condition Type", obvOptions));
+        params.put("conditionType", new StrategyModel.ParameterDefinition("string", "ABOVE_MA", "Condition Type", options));
 
-        strategies.add(new StrategyModel("OBV", "On-Balance Volume",
-                "Tracks volume flow to predict price movements and confirm trends", obvParams));
+        return new StrategyModel("OBV", "On-Balance Volume",
+                "Tracks volume flow to predict price movements and confirm trends", params);
+    }
 
-        // PIVOT_POINTS
-        Map<String, StrategyModel.ParameterDefinition> pivotParams = new HashMap<>();
+    @Nonnull
+    private StrategyModel createPivotPointsStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
 
-        List<StrategyModel.ParameterOption> pivotTypeOptions = Arrays.asList(
+        List<StrategyModel.ParameterOption> typeOptions = Arrays.asList(
                 new StrategyModel.ParameterOption("STANDARD", "Standard"),
                 new StrategyModel.ParameterOption("FIBONACCI", "Fibonacci"),
                 new StrategyModel.ParameterOption("WOODIE", "Woodie"),
                 new StrategyModel.ParameterOption("CAMARILLA", "Camarilla"),
                 new StrategyModel.ParameterOption("DEMARK", "DeMark")
         );
-        pivotParams.put("pivotType", new StrategyModel.ParameterDefinition("string", "STANDARD", "Pivot Type", pivotTypeOptions));
+        params.put("pivotType", new StrategyModel.ParameterDefinition("string", "STANDARD", "Pivot Type", typeOptions));
 
-        List<StrategyModel.ParameterOption> pivotLevelOptions = Arrays.asList(
+        List<StrategyModel.ParameterOption> levelOptions = Arrays.asList(
                 new StrategyModel.ParameterOption("PP", "Pivot Point"),
                 new StrategyModel.ParameterOption("R1", "Resistance 1"),
                 new StrategyModel.ParameterOption("R2", "Resistance 2"),
@@ -165,70 +202,76 @@ public class StrategyManager {
                 new StrategyModel.ParameterOption("S2", "Support 2"),
                 new StrategyModel.ParameterOption("S3", "Support 3")
         );
-        pivotParams.put("pivotLevel", new StrategyModel.ParameterDefinition("string", "PP", "Pivot Level", pivotLevelOptions));
-        pivotParams.put("crossAbove", new StrategyModel.ParameterDefinition("boolean", true, "Cross Above"));
-        pivotParams.put("useClose", new StrategyModel.ParameterDefinition("boolean", true, "Use Close Price"));
+        params.put("pivotLevel", new StrategyModel.ParameterDefinition("string", "PP", "Pivot Level", levelOptions));
+        params.put("crossAbove", new StrategyModel.ParameterDefinition("boolean", true, "Cross Above"));
+        params.put("useClose", new StrategyModel.ParameterDefinition("boolean", true, "Use Close Price"));
 
-        strategies.add(new StrategyModel("PIVOT_POINTS", "Pivot Points",
-                "Identifies key support and resistance levels based on previous period", pivotParams));
+        return new StrategyModel("PIVOT_POINTS", "Pivot Points",
+                "Identifies key support and resistance levels based on previous period", params);
+    }
 
-        // ROC
-        Map<String, StrategyModel.ParameterDefinition> rocParams = new HashMap<>();
-        rocParams.put("period", new StrategyModel.ParameterDefinition("number", 12, "Period"));
-        rocParams.put("threshold", new StrategyModel.ParameterDefinition("number", 5.0, "Threshold %", 0.1));
+    @Nonnull
+    private StrategyModel createRocStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
+        params.put("period", new StrategyModel.ParameterDefinition("number", 12, "Period"));
+        params.put("threshold", new StrategyModel.ParameterDefinition("number", 5.0, "Threshold %", 0.1));
 
-        List<StrategyModel.ParameterOption> rocDirectionOptions = Arrays.asList(
+        List<StrategyModel.ParameterOption> options = Arrays.asList(
                 new StrategyModel.ParameterOption("ABOVE", "Above"),
                 new StrategyModel.ParameterOption("BELOW", "Below"),
                 new StrategyModel.ParameterOption("EQUAL", "Equal"),
                 new StrategyModel.ParameterOption("CROSSING_ABOVE", "Crossing Above"),
                 new StrategyModel.ParameterOption("CROSSING_BELOW", "Crossing Below")
         );
-        rocParams.put("direction", new StrategyModel.ParameterDefinition("string", "ABOVE", "Direction", rocDirectionOptions));
+        params.put("direction", new StrategyModel.ParameterDefinition("string", "ABOVE", "Direction", options));
 
-        strategies.add(new StrategyModel("ROC", "Rate of Change",
-                "Measures momentum by comparing current price to price N periods ago", rocParams));
+        return new StrategyModel("ROC", "Rate of Change",
+                "Measures momentum by comparing current price to price N periods ago", params);
+    }
 
-        // ROC_CROSSOVER
-        Map<String, StrategyModel.ParameterDefinition> rocCrossParams = new HashMap<>();
-        rocCrossParams.put("period", new StrategyModel.ParameterDefinition("number", 12, "Period"));
-        rocCrossParams.put("threshold", new StrategyModel.ParameterDefinition("number", 0.0, "Threshold %", 0.1));
-        rocCrossParams.put("crossAbove", new StrategyModel.ParameterDefinition("boolean", true, "Cross Above"));
+    @Nonnull
+    private StrategyModel createRocCrossoverStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
+        params.put("period", new StrategyModel.ParameterDefinition("number", 12, "Period"));
+        params.put("threshold", new StrategyModel.ParameterDefinition("number", 0.0, "Threshold %", 0.1));
+        params.put("crossAbove", new StrategyModel.ParameterDefinition("boolean", true, "Cross Above"));
 
-        strategies.add(new StrategyModel("ROC_CROSSOVER", "ROC Crossover",
-                "Detects when Rate of Change crosses above or below threshold level", rocCrossParams));
+        return new StrategyModel("ROC_CROSSOVER", "ROC Crossover",
+                "Detects when Rate of Change crosses above or below threshold level", params);
+    }
 
-        // ROC_DIVERGENCE
-        Map<String, StrategyModel.ParameterDefinition> rocDivParams = new HashMap<>();
-        rocDivParams.put("period", new StrategyModel.ParameterDefinition("number", 12, "ROC Period"));
-        rocDivParams.put("divergencePeriod", new StrategyModel.ParameterDefinition("number", 20, "Divergence Period"));
-        rocDivParams.put("bullish", new StrategyModel.ParameterDefinition("boolean", true, "Bullish Divergence"));
+    @Nonnull
+    private StrategyModel createRocDivergenceStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
+        params.put("period", new StrategyModel.ParameterDefinition("number", 12, "ROC Period"));
+        params.put("divergencePeriod", new StrategyModel.ParameterDefinition("number", 20, "Divergence Period"));
+        params.put("bullish", new StrategyModel.ParameterDefinition("boolean", true, "Bullish Divergence"));
 
-        strategies.add(new StrategyModel("ROC_DIVERGENCE", "ROC Divergence",
-                "Identifies bullish/bearish divergences between price and ROC momentum", rocDivParams));
+        return new StrategyModel("ROC_DIVERGENCE", "ROC Divergence",
+                "Identifies bullish/bearish divergences between price and ROC momentum", params);
+    }
 
-        // FIBONACCI_RETRACEMENT
-        Map<String, StrategyModel.ParameterDefinition> fibParams = new HashMap<>();
-        fibParams.put("lookbackPeriod", new StrategyModel.ParameterDefinition("number", 50, "Lookback Period"));
+    @Nonnull
+    private StrategyModel createFibonacciStrategy() {
+        Map<String, StrategyModel.ParameterDefinition> params = new HashMap<>();
+        params.put("lookbackPeriod", new StrategyModel.ParameterDefinition("number", 50, "Lookback Period"));
 
-        List<StrategyModel.ParameterOption> fibLevelOptions = Arrays.asList(
+        List<StrategyModel.ParameterOption> options = Arrays.asList(
                 new StrategyModel.ParameterOption("0.236", "23.6%"),
                 new StrategyModel.ParameterOption("0.382", "38.2%"),
                 new StrategyModel.ParameterOption("0.5", "50%"),
                 new StrategyModel.ParameterOption("0.618", "61.8%"),
                 new StrategyModel.ParameterOption("0.786", "78.6%")
         );
-        fibParams.put("level", new StrategyModel.ParameterDefinition("number", 0.618, "Fibonacci Level", fibLevelOptions));
-        fibParams.put("isBullish", new StrategyModel.ParameterDefinition("boolean", true, "Bullish Retracement"));
-        fibParams.put("tolerance", new StrategyModel.ParameterDefinition("number", 0.01, "Tolerance", 0.001));
+        params.put("level", new StrategyModel.ParameterDefinition("number", 0.618, "Fibonacci Level", options));
+        params.put("isBullish", new StrategyModel.ParameterDefinition("boolean", true, "Bullish Retracement"));
+        params.put("tolerance", new StrategyModel.ParameterDefinition("number", 0.01, "Tolerance", 0.001));
 
-        strategies.add(new StrategyModel("FIBONACCI_RETRACEMENT", "Fibonacci Retracement",
-                "Identifies potential support/resistance levels using Fibonacci ratios", fibParams));
-
-        return strategies;
+        return new StrategyModel("FIBONACCI_RETRACEMENT", "Fibonacci Retracement",
+                "Identifies potential support/resistance levels using Fibonacci ratios", params);
     }
 
-    public StrategyModel getStrategy(String key) {
+    public StrategyModel getStrategy(@Nonnull String key) {
         return getAllStrategies().stream()
                 .filter(strategy -> strategy.getKey().equals(key))
                 .findFirst()

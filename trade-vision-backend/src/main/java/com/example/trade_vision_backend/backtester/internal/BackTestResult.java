@@ -12,5 +12,5 @@ public record BackTestResult(
         double winRatio,
         double maxDrawdown,
         List<Trade> trades,
-        List<Double> equityCurve) {
+        double[] equityCurve) {
 }

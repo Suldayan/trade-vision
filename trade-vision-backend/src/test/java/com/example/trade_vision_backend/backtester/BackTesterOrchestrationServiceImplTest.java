@@ -85,7 +85,7 @@ class BackTesterOrchestrationServiceImplTest {
                 .winRatio(0.6)
                 .maxDrawdown(0.05)
                 .trades(Collections.emptyList())
-                .equityCurve(Collections.emptyList())
+                .equityCurve(new double[0])
                 .build();
     }
 
