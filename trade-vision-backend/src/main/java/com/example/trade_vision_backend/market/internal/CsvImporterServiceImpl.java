@@ -45,6 +45,65 @@ public class CsvImporterServiceImpl implements CsvImporterService {
     private DateTimeFormatter detectedDateFormatter = null;
     private boolean isDateOnly = false;
 
+    private static class DataArrays {
+        final LocalDateTime[] timestamps;
+        final double[] opens;
+        final double[] highs;
+        final double[] lows;
+        final double[] closes;
+        final double[] adjustedCloses;
+        final long[] volumes;
+        final double[] dividendAmounts;
+        final double[] splitCoefficients;
+        int currentIndex = 0;
+
+        DataArrays(int capacity) {
+            timestamps = new LocalDateTime[capacity];
+            opens = new double[capacity];
+            highs = new double[capacity];
+            lows = new double[capacity];
+            closes = new double[capacity];
+            adjustedCloses = new double[capacity];
+            volumes = new long[capacity];
+            dividendAmounts = new double[capacity];
+            splitCoefficients = new double[capacity];
+        }
+
+        void addDataPoint(LocalDateTime timestamp, double open, double high, double low,
+                          double close, double adjustedClose, long volume,
+                          double dividendAmount, double splitCoefficient) {
+            timestamps[currentIndex] = timestamp;
+            opens[currentIndex] = open;
+            highs[currentIndex] = high;
+            lows[currentIndex] = low;
+            closes[currentIndex] = close;
+            adjustedCloses[currentIndex] = adjustedClose;
+            volumes[currentIndex] = volume;
+            dividendAmounts[currentIndex] = dividendAmount;
+            splitCoefficients[currentIndex] = splitCoefficient;
+            currentIndex++;
+        }
+
+        List<MarketDataPoint> toDataPoints() {
+            List<MarketDataPoint> dataPoints = new ArrayList<>(currentIndex);
+            for (int i = 0; i < currentIndex; i++) {
+                MarketDataPoint dataPoint = new MarketDataPoint(
+                        timestamps[i],
+                        opens[i],
+                        highs[i],
+                        lows[i],
+                        closes[i],
+                        adjustedCloses[i],
+                        volumes[i],
+                        dividendAmounts[i],
+                        splitCoefficients[i]
+                );
+                dataPoints.add(dataPoint);
+            }
+            return dataPoints;
+        }
+    }
+
     private static class ImportStats {
         int processedRows = 0;
         int skippedRows = 0;
@@ -81,7 +140,6 @@ public class CsvImporterServiceImpl implements CsvImporterService {
     @Nonnull
     @Override
     public MarketData importCsvFromStream(@Nonnull InputStream stream) throws IOException {
-        List<MarketDataPoint> allDataPoints = new ArrayList<>();
         ImportStats stats = new ImportStats();
         boolean isReverseChronological = false;
         boolean orderDetermined = false;
@@ -92,6 +150,10 @@ public class CsvImporterServiceImpl implements CsvImporterService {
         detectedDateTimeFormatter = null;
         detectedDateFormatter = null;
         isDateOnly = false;
+
+        // First pass: count rows for pre-sizing
+        int estimatedRows = estimateRowCount(stream);
+        DataArrays dataArrays = new DataArrays(estimatedRows);
 
         try (BufferedReader bufferedReader = new BufferedReader(
                 new InputStreamReader(BOMInputStream.builder()
@@ -129,23 +191,19 @@ public class CsvImporterServiceImpl implements CsvImporterService {
                     String lowStr = record.get(Headers.LOW);
                     String closeStr = record.get(Headers.CLOSE);
 
-                    // Quick empty check
+                    // Quick empty check - batch validation
                     if (timestampStr.isEmpty() || openStr.isEmpty() || highStr.isEmpty() ||
                             lowStr.isEmpty() || closeStr.isEmpty()) {
                         stats.skippedRows++;
                         continue;
                     }
 
-                    // Parse timestamp
                     timestamp = parseTimestamp(timestampStr);
+                    open = parseDouble(openStr);
+                    high = parseDouble(highStr);
+                    low = parseDouble(lowStr);
+                    close = parseDouble(closeStr);
 
-                    // Parse numbers
-                    open = Double.parseDouble(openStr);
-                    high = Double.parseDouble(highStr);
-                    low = Double.parseDouble(lowStr);
-                    close = Double.parseDouble(closeStr);
-
-                    // Quick validation - only if parsing succeeded
                     if (high < low || open < low || open > high || close < low || close > high) {
                         stats.dataOutOfRangeRows++;
                         stats.skippedRows++;
@@ -153,7 +211,6 @@ public class CsvImporterServiceImpl implements CsvImporterService {
                     }
 
                 } catch (Exception e) {
-                    // Handle all parsing failures in one place
                     if (e instanceof DateTimeParseException) {
                         stats.invalidDateRows++;
                     } else if (e instanceof NumberFormatException) {
@@ -164,7 +221,6 @@ public class CsvImporterServiceImpl implements CsvImporterService {
                     continue;
                 }
 
-                // Timestamp ordering detection
                 if (firstTimestamp == null) {
                     firstTimestamp = timestamp;
                 } else if (secondTimestamp == null) {
@@ -176,7 +232,6 @@ public class CsvImporterServiceImpl implements CsvImporterService {
                     orderDetermined = true;
                 }
 
-                // Parse optional fields - using simpler approach
                 double adjustedClose = safeParseDouble(record, Headers.ADJUSTED_CLOSE, close);
                 long volume = safeParseLong(record);
                 double dividendAmount = safeParseDouble(record, Headers.DIVIDEND_AMOUNT, 0.0);
@@ -188,33 +243,22 @@ public class CsvImporterServiceImpl implements CsvImporterService {
                     continue;
                 }
 
-                // Create data point
-                MarketDataPoint dataPoint = MarketDataPoint.builder()
-                        .timestamp(timestamp)
-                        .open(open)
-                        .high(high)
-                        .low(low)
-                        .close(close)
-                        .adjustedClose(adjustedClose)
-                        .volume(volume)
-                        .dividendAmount(dividendAmount)
-                        .splitCoefficient(splitCoefficient)
-                        .build();
-
-                allDataPoints.add(dataPoint);
+                dataArrays.addDataPoint(timestamp, open, high, low, close,
+                        adjustedClose, volume, dividendAmount, splitCoefficient);
             }
 
-            if (!orderDetermined && !allDataPoints.isEmpty()) {
+            if (!orderDetermined && dataArrays.currentIndex > 0) {
                 log.info("Could not determine chronological order of data. Assuming standard chronological order.");
             }
 
+            List<MarketDataPoint> allDataPoints = dataArrays.toDataPoints();
             MarketData marketData = new MarketData();
+
             if (isReverseChronological) {
                 allDataPoints.sort(Comparator.comparing(MarketDataPoint::timestamp));
             }
 
             marketData.addDataPoints(allDataPoints);
-
             stats.logResults();
 
             int totalDataPoints = allDataPoints.size();
@@ -233,6 +277,29 @@ public class CsvImporterServiceImpl implements CsvImporterService {
             }
             throw new RuntimeException("Unexpected error during CSV import", e);
         }
+    }
+
+    private int estimateRowCount(InputStream stream) throws IOException {
+        if (!stream.markSupported()) {
+            return 10000; // Default estimate if we can't count
+        }
+
+        stream.mark(Integer.MAX_VALUE);
+        int lineCount = 0;
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+            while (reader.readLine() != null) {
+                lineCount++;
+            }
+        }
+        stream.reset();
+        return Math.max(lineCount - 1, 100);
+    }
+
+    private double parseDouble(@Nonnull String value) {
+        if (value.isEmpty()) {
+            throw new NumberFormatException("Value cannot be empty");
+        }
+        return Double.parseDouble(value);
     }
 
     private void validateHeaders(@Nonnull Map<String, Integer> headerMap) {
@@ -300,7 +367,7 @@ public class CsvImporterServiceImpl implements CsvImporterService {
 
     @Nonnull
     private LocalDateTime parseTimestamp(@Nonnull String timestamp) {
-        if (timestamp.trim().isEmpty()) {
+        if (timestamp.isEmpty()) {
             throw new IllegalArgumentException("Timestamp cannot be empty");
         }
 
@@ -315,7 +382,6 @@ public class CsvImporterServiceImpl implements CsvImporterService {
                 return LocalDate.parse(timestamp, detectedDateFormatter).atStartOfDay();
             } else {
                 if (detectedDateTimeFormatter == null) {
-                    // The detectedDateTimeFormatter may be null, so we make a final check here before returning
                     throw new IllegalArgumentException("Date time formatter has been passed as null");
                 }
                 return LocalDateTime.parse(timestamp, detectedDateTimeFormatter);
@@ -371,13 +437,6 @@ public class CsvImporterServiceImpl implements CsvImporterService {
         }
     }
 
-    private double parseDouble(@Nonnull String value) {
-        if (value.trim().isEmpty()) {
-            throw new NumberFormatException("Value cannot be empty");
-        }
-        return Double.parseDouble(value);
-    }
-
     private double safeParseDouble(
             @Nonnull CSVRecord record,
             @Nonnull String header,
@@ -385,13 +444,18 @@ public class CsvImporterServiceImpl implements CsvImporterService {
         try {
             if (!record.isMapped(header)) return defaultValue;
 
+            Map<String, Integer> headerMap = record.getParser().getHeaderMap();
+            Integer headerIndex = headerMap.get(header.toLowerCase());
+            if (headerIndex == null || headerIndex >= record.size()) {
+                return defaultValue;
+            }
+
             String value = record.get(header);
-            if (value == null || value.trim().isEmpty()) {
+            if (value == null || value.isEmpty()) {
                 return defaultValue;
             }
             return Double.parseDouble(value);
         } catch (Exception e) {
-            log.debug("Failed to parse double for {}: {}", header, e.getMessage());
             return defaultValue;
         }
     }
@@ -402,13 +466,20 @@ public class CsvImporterServiceImpl implements CsvImporterService {
             if (!record.isMapped(Headers.VOLUME)) {
                 return 0L;
             }
+
+            // Additional bounds check to prevent index out of bounds
+            Map<String, Integer> headerMap = record.getParser().getHeaderMap();
+            Integer headerIndex = headerMap.get(Headers.VOLUME.toLowerCase());
+            if (headerIndex == null || headerIndex >= record.size()) {
+                return 0L;
+            }
+
             String value = record.get(Headers.VOLUME);
-            if (value == null || value.trim().isEmpty()) {
+            if (value == null || value.isEmpty()) {
                 return 0L;
             }
             return Long.parseLong(value);
         } catch (Exception e) {
-            log.debug("Failed to parse long for {}: {}", Headers.VOLUME, e.getMessage());
             return 0L;
         }
     }
