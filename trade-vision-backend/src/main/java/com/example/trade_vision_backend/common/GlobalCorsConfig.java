@@ -10,7 +10,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 @Configuration
 public class GlobalCorsConfig {
     private final static String BACKTEST_MAPPING = "/api/backtest/execute";
-    private final static String STRATEGY_MAPPING = "/api/strategies";
+    private final static String STRATEGY_MAPPING = "/api/strategies/all";
     private final static String HEALTH_MAPPING = "/health/ping";
 
     @Value("${frontend.url}")
