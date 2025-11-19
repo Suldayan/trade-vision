@@ -1,12 +1,13 @@
-import React from 'react';
-import BacktestPage from './pages/BacktestPage';
+import { Routes, Route, BrowserRouter as Router } from 'react-router-dom'
+import './App.css'
+import Home from './pages/Home'
 
-const App: React.FC = () => {
+export default function App() {
   return (
-    <div className="min-h-screen bg-gray-100">
-      <BacktestPage />
-    </div>
-  );
-};
-
-export default App;
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+      </Routes>
+    </Router>
+  )
+}
