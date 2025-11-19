@@ -1,9 +1,10 @@
-import React, { useState } from 'react';
+import React, { Suspense, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import BacktestForm from '../components/BacktestForm';
-import BacktestResults from '../components/BacktestResults';
 import { BackTestRequest, BackTestResult } from '../types/backtest';
 import { runBacktest } from '../services/api';
+
+const BacktestForm = React.lazy(() => import('../components/BacktestForm'));
+const BacktestResults = React.lazy(() => import('../components/BacktestResults'));
 
 const BacktestPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(false);
@@ -91,7 +92,9 @@ const BacktestPage: React.FC = () => {
                 <div className="h-6 w-1 bg-blue-500 mr-3"></div>
                 <h2 className="text-lg font-bold tracking-wider uppercase text-blue-400">Strategy Parameters</h2>
               </div>
-              <BacktestForm onSubmit={handleSubmit} isLoading={isLoading} />
+              <Suspense fallback={<div>Loading form...</div>}>
+                <BacktestForm onSubmit={handleSubmit} isLoading={isLoading} />
+              </Suspense>
             </div>
           </motion.div>
           
@@ -125,7 +128,9 @@ const BacktestPage: React.FC = () => {
                       <div className="h-6 w-1 bg-green-500 mr-3"></div>
                       <h2 className="text-lg font-bold tracking-wider uppercase text-green-400">Results</h2>
                     </div>
-                    <BacktestResults result={result} />
+                    <Suspense fallback={<div>Loading results...</div>}>
+                      <BacktestResults result={result} />
+                    </Suspense>
                   </div>
                 </motion.div>
               ) : (
