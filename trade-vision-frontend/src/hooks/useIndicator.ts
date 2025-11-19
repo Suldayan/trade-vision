@@ -13,6 +13,7 @@ export const useIndicators = (): UseIndicatorsReturn => {
   const [indicators, setIndicators] = useState<StrategyModel[] | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const API_STRATEGY_URL = import.meta.env.VITE_API_URL;
 
   const fetchIndicators = useCallback(async (): Promise<void> => {
     console.log("[useIndicators] Fetching indicators from backend...");
@@ -20,7 +21,7 @@ export const useIndicators = (): UseIndicatorsReturn => {
     setError(null);
 
     try {
-      const response = await fetch('http://localhost:8080/api/strategies/all', {
+      const response = await fetch(API_STRATEGY_URL, {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
