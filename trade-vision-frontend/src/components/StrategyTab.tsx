@@ -1,4 +1,4 @@
-import React, { useCallback } from 'react'
+import { useCallback } from 'react'
 import { Plus, Copy, Trash2 } from 'lucide-react'
 
 interface BacktestConfig {
