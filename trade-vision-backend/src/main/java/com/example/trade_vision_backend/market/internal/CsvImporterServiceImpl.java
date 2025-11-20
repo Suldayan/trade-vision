@@ -467,7 +467,6 @@ public class CsvImporterServiceImpl implements CsvImporterService {
                 return 0L;
             }
 
-            // Additional bounds check to prevent index out of bounds
             Map<String, Integer> headerMap = record.getParser().getHeaderMap();
             Integer headerIndex = headerMap.get(Headers.VOLUME.toLowerCase());
             if (headerIndex == null || headerIndex >= record.size()) {
