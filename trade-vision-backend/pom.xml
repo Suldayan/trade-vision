@@ -9,9 +9,9 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.example</groupId>
-	<artifactId>trade-vision-backend</artifactId>
+	<artifactId>spring-backend</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>trade-vision-backend</name>
+	<name>spring-backend</name>
 	<description>Demo project for Spring Boot</description>
 	<url/>
 	<licenses>
