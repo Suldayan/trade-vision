@@ -140,7 +140,6 @@ public class BackTesterServiceImpl implements BackTesterService {
                 initialCapital, currentCapital, ((currentCapital - initialCapital) / initialCapital) * 100);
 
         // Clear strategy cache to free memory
-        strategy.clearCache();
 
         return calculatePerformanceMetrics(initialCapital, currentCapital, trades, equityCurve);
     }

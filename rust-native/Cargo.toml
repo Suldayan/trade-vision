@@ -1,0 +1,20 @@
+[package]
+name = "rust-native"  
+version = "0.1.0"
+edition = "2024"  
+
+[dependencies]
+ta = "0.5"         
+thiserror = "1.0"  
+
+[lib]
+name = "rust_native"
+path = "src/lib.rs"
+
+[dev-dependencies]
+criterion = "0.5"
+approx = "0.5"
+
+[[bench]]
+name = "moving_average_bench"
+harness = false
