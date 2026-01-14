@@ -1,5 +1,5 @@
 use criterion::{black_box, criterion_group, criterion_main, Criterion, Throughput};
-use rust_native::{calc_sma, calc_ema, calc_macd, calc_bollinger};
+use engine::{calc_sma, calc_ema, calc_macd, calc_bollinger};
 
 fn generate_ohlcv_prices(size: usize) -> Vec<f64> {
     let mut prices = Vec::with_capacity(size);

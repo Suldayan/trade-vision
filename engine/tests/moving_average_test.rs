@@ -1,6 +1,6 @@
 #[cfg(test)]
 mod tests {
-    use rust_native::{calc_sma, calc_ema, calc_macd, calc_bollinger};
+    use engine::{calc_sma, calc_ema, calc_macd, calc_bollinger};
     use approx::assert_relative_eq;
 
     fn sample_prices() -> Vec<f64> {
